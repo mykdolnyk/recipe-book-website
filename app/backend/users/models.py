@@ -22,3 +22,12 @@ class User(db.Model, UserMixin):
     reviewed_applications: Mapped[List['RecipePublicationApplication']] = relationship(back_populates='last_reviewed_by')
     
     created_on: Mapped[datetime] = mapped_column(default=datetime.now)
+    
+    def info_dict(self):
+        dictionary = {
+            "id": self.id,
+            "name": self.name,
+            "bio": self.bio,
+        }
+        
+        return dictionary

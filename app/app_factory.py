@@ -33,7 +33,9 @@ def create_app(config_object):
     def user_loader(user_id: str):
         return User.query.get(int(user_id))
 
+    from backend.users.routes import user_bp
     from backend.recipes.routes import recipes_bp
+    app.register_blueprint(user_bp)
     app.register_blueprint(recipes_bp)
 
     return app
