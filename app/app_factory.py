@@ -2,11 +2,13 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
-
+from password_strength import PasswordPolicy
+from config import PASSWORD_POLICY
 
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
+password_policy = PasswordPolicy.from_names(**PASSWORD_POLICY)
 
 
 def create_app(config_object):

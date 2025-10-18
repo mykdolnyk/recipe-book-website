@@ -1,4 +1,7 @@
 from flask.blueprints import Blueprint
+from pydantic import ValidationError
+from backend.users.helpers import create_user_instance
+from backend.users.schemas import UserCreateSchema
 from backend.users.models import User
 from flask import jsonify, request
 from app_factory import db
@@ -33,10 +36,30 @@ def get_user_list():
 
 
 @user_bp.route('/users', methods=["POST"])
-def create_user():
+def register_user():
+    try:
+        user_schema = UserCreateSchema(**request.get_json())
+    except ValidationError as error:
+        return jsonify({"errors": error.errors(include_url=False, include_context=False)}), 400
+    
+    new_user = create_user_instance(user_schema)
+ 
+    response = {'user': new_user.info_dict()}
+ 
+    return jsonify(response)
 
-    new_user = User(**request.get_json())
-    db.session.add(new_user)
-    db.session.commit()
 
-    return jsonify(request.get_json())
+@user_bp.route('/users/<int:id>', methods=["GET"])
+def get_user_info(id: int):
+    user = User.query.get(id)
+    
+    if not user:
+        response = {
+            "errors": [
+                {'msg': "User with such ID doesn't exist."}
+            ]
+        }
+        return jsonify(response), 404
+
+    response = {'user': user.info_dict()}
+    return jsonify(response)
