@@ -1,17 +1,21 @@
+import config
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from password_strength import PasswordPolicy
-from config import PASSWORD_POLICY
+from logging.config import dictConfig as logging_config
+
 
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
-password_policy = PasswordPolicy.from_names(**PASSWORD_POLICY)
+password_policy = PasswordPolicy.from_names(**config.PASSWORD_POLICY)
 
 
 def create_app(config_object):
+    logging_config(config.LOGGING)
+    
     app = Flask(__name__)
     app.config.from_object(config_object)
 
