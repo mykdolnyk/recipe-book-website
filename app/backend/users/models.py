@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, List
-from app_factory import db, login_manager
+from app_factory import db
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from flask_login import UserMixin
 if TYPE_CHECKING:
@@ -13,7 +13,7 @@ class User(db.Model, UserMixin):
     password: Mapped[str] = mapped_column()
     
     name: Mapped[str] = mapped_column()
-    bio: Mapped[str] = mapped_column()
+    bio: Mapped[str] = mapped_column(default='')
 
     recipes: Mapped[List['Recipe']] = relationship(back_populates='author')
     mixes: Mapped[List['RecipeMix']] = relationship(back_populates='author')
@@ -23,6 +23,8 @@ class User(db.Model, UserMixin):
     
     created_on: Mapped[datetime] = mapped_column(default=datetime.now)
     
+    is_active: Mapped[bool] = mapped_column(default=True)
+    
     def info_dict(self):
         dictionary = {
             "id": self.id,
@@ -31,3 +33,7 @@ class User(db.Model, UserMixin):
         }
         
         return dictionary
+
+    @classmethod
+    def active_only(cls):
+        return db.session.query(cls).filter_by(is_active=True)

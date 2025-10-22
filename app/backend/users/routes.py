@@ -20,7 +20,7 @@ def get_user_list():
     page = request.args.get('page', 1)
     per_page = request.args.get('per-page', 5)
 
-    pagination = User.query.paginate(page=page,
+    pagination = User.active_only().paginate(page=page,
                                      per_page=per_page,
                                      max_per_page=25,
                                      error_out=False)
@@ -52,7 +52,7 @@ def register_user():
 
 @user_bp.route('/users/<int:id>', methods=["GET"])
 def get_user_info(id: int):
-    user = User.query.get(id)
+    user = User.active_only().filter_by(id=id).first()
     
     if not user:
         return create_error_response(ErrorCode.USER_NOT_FOUND)
@@ -68,7 +68,7 @@ def edit_user(id: int):
     except ValidationError as error:
         return jsonify({"errors": error.errors(include_url=False, include_context=False)}), 400
     
-    user: User = User.query.get(id)
+    user: User = User.active_only().filter_by(id=id).first()
     if not user:
         return create_error_response(ErrorCode.USER_NOT_FOUND)
     
@@ -86,3 +86,20 @@ def edit_user(id: int):
     response = {'user': user.info_dict()}
  
     return jsonify(response)
+
+
+@user_bp.route('/users/<int:id>', methods=['DELETE'])
+def delete_user(id: int):
+    args = request.args
+    if args.get('confirm', 'false').lower() != 'true':
+        return create_error_response('Deletion was not confirmed.', status_code=403)
+    
+    user: User = User.active_only().filter_by(id=id).first()
+    
+    if not user:
+        return create_error_response(ErrorCode.USER_NOT_FOUND)
+    
+    user.is_active = False
+    db.session.commit()
+    
+    return '', 204
