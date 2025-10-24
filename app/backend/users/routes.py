@@ -1,3 +1,4 @@
+from logging import getLogger
 from flask.blueprints import Blueprint
 from pydantic import ValidationError
 from backend.users.helpers import create_user_instance
@@ -6,6 +7,9 @@ from backend.users.models import User
 from backend.utils.errors import create_error_response, ErrorCode
 from flask import jsonify, request
 from app_factory import db
+
+
+logger = getLogger(__name__)
 
 
 user_bp = Blueprint(
@@ -43,7 +47,11 @@ def register_user():
     except ValidationError as error:
         return jsonify({"errors": error.errors(include_url=False, include_context=False)}), 400
     
-    new_user = create_user_instance(user_schema)
+    try:
+        new_user = create_user_instance(user_schema)
+    except Exception as e:
+        logger.exception(e)
+        return create_error_response(ErrorCode.UNKNOWN)
  
     response = {'user': new_user.info_dict()}
  
@@ -80,7 +88,7 @@ def edit_user(id: int):
     try:
         db.session.commit()
     except Exception as e:
-        # TODO: log that
+        logger.exception(e)
         return create_error_response(ErrorCode.UNKNOWN)
  
     response = {'user': user.info_dict()}
@@ -100,6 +108,10 @@ def delete_user(id: int):
         return create_error_response(ErrorCode.USER_NOT_FOUND)
     
     user.is_active = False
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception as e:
+        logger.exception(e)
+        return create_error_response(ErrorCode.UNKNOWN)
     
     return '', 204

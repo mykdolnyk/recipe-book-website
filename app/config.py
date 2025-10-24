@@ -41,10 +41,21 @@ LOGGING = {
         }
     },
 
-    'loggers': {},
+    'loggers': {
+        'backend.users.routes': {
+            'handlers': {'stdout', 'error_log'},
+            'level': 'INFO',
+            'propagate': False
+        },
+        'backend.recipes.routes': {
+            'handlers': {'stdout', 'error_log'},
+            'level': 'INFO',
+            'propagate': False
+        },
+    },
 
     'root': {
-        'handlers': ['stdout', 'error_log'],
+        'handlers': ['error_log'],
         'level': 'ERROR'
     }
 }
