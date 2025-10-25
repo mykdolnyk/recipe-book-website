@@ -11,7 +11,7 @@ def check_email_availability(email: EmailStr):
     return email
 
 
-class UserCreateSchema(BaseModel):
+class UserCreate(BaseModel):
     name: str = Field(..., max_length=64)
     email: EmailStr 
     password: str = Field(..., min_length=8, max_length=128)
@@ -42,10 +42,17 @@ class UserCreateSchema(BaseModel):
     _validate_email = field_validator('email')(check_email_availability)
     
 
-class UserEditSchema(BaseModel):
+class UserEdit(BaseModel):
     name: str = Field(..., max_length=64)
     bio: str = Field(..., max_length=512)
     email: EmailStr
 
     _validate_email = field_validator('email')(check_email_availability)
 
+
+class UserSchema(BaseModel):
+    id: int
+    name: str
+    
+    class Config:
+        from_attributes = True
