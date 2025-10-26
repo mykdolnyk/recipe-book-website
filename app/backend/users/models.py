@@ -26,5 +26,5 @@ class User(db.Model, UserMixin):
     is_active: Mapped[bool] = mapped_column(default=True)
     
     @classmethod
-    def active_only(cls):
+    def active(cls):
         return db.session.query(cls).filter_by(is_active=True)
