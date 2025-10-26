@@ -5,7 +5,7 @@ from pydantic import ValidationError
 from backend.utils.errors import ErrorCode, create_error_response
 from backend.recipes.helpers import create_recipe_instance
 from backend.recipes.models import Recipe
-from backend.recipes.schemas import RecipeCreate, RecipeSchema
+from backend.recipes.schemas import RecipeCreate, RecipeEdit, RecipeSchema
 from app_factory import db
 
 
@@ -63,9 +63,35 @@ def get_recipes_list():
 @recipes_bp.route('/recipes/<int:id>', methods=['GET'])
 def get_recipe(id: int):
     recipe = Recipe.query.get(id)
-    
     if not recipe:
         abort(404)
         
     response = json.loads(RecipeSchema.model_validate(recipe).model_dump_json())
+    return jsonify(response)
+
+
+@recipes_bp.route('/recipes/<int:id>', methods=['PUT'])
+def edit_recipe(id: int):
+    try:
+        recipe_schema = RecipeEdit(**request.get_json())
+    except ValidationError as error:
+        return jsonify({"errors": error.errors(include_url=False, include_context=False)}), 400
+    
+    recipe = Recipe.query.get(id)
+    if not recipe:
+        abort(404)
+        
+    new_data = recipe_schema.model_dump(exclude_unset=True)
+    # Update the values of the DB model
+    for key, value in new_data.items():
+        setattr(recipe, key, value)
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        logger.exception(e)
+        return create_error_response(ErrorCode.UNKNOWN)
+    
+    response = RecipeSchema.model_validate(recipe).model_dump()
+    
     return jsonify(response)

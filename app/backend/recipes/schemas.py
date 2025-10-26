@@ -1,4 +1,5 @@
-from pydantic import BaseModel, computed_field
+from typing import Optional
+from pydantic import BaseModel, Field, computed_field
 from slugify import slugify
 
 from backend.users.schemas import UserSchema
@@ -35,20 +36,31 @@ class RecipeTagSchema(BaseModel):
 
 
 class RecipeCreate(BaseModel):
-    name: str
+    name: str = Field(..., max_length=64)
     calories: int
     cooking_time: int
-    ingredients: str
-    text: str
+    ingredients: str = Field(..., max_length=512)
+    text: str = Field(..., max_length=8192)
 
     period_type_id: int
     author_id: int
-    tags: list[int] = list()
+    tags: Optional[list[int]] = Field(default_factory=list)
     
     @computed_field
     @property
     def slug(self) -> str:
         return slugify(self.name)
+
+
+class RecipeEdit(BaseModel):
+    name: Optional[str] = Field(default=None, max_length=64)
+    calories: Optional[int] = None
+    cooking_time: Optional[int] = None
+    ingredients: Optional[str] = Field(default=None, max_length=512)
+    text: Optional[str] = Field(default=None, max_length=8192)
+
+    period_type_id: Optional[int] = None
+    tags: Optional[list[int]] = Field(default_factory=list)
 
 
 class RecipeSchema(BaseModel):
@@ -62,6 +74,7 @@ class RecipeSchema(BaseModel):
     period_type: PeriodTypeSchema | None
     author: UserSchema | None
     tags: list[RecipeTagSchema]
+    slug: str
     
     class Config:
         from_attributes = True
