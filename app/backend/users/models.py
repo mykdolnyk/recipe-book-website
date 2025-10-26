@@ -25,15 +25,6 @@ class User(db.Model, UserMixin):
     
     is_active: Mapped[bool] = mapped_column(default=True)
     
-    def info_dict(self):
-        dictionary = {
-            "id": self.id,
-            "name": self.name,
-            "bio": self.bio,
-        }
-        
-        return dictionary
-
     @classmethod
     def active_only(cls):
         return db.session.query(cls).filter_by(is_active=True)

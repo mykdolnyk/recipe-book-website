@@ -6,6 +6,9 @@ import bcrypt
 
 
 def check_email_availability(email: EmailStr):
+    if email is None:
+        return None
+    
     if User.query.filter(User.email == email).first():
         raise ValueError('The email is already taken.')
     return email
@@ -43,9 +46,9 @@ class UserCreate(BaseModel):
     
 
 class UserEdit(BaseModel):
-    name: str = Field(..., max_length=64)
-    bio: str = Field(..., max_length=512)
-    email: EmailStr
+    name: str | None = Field(default=None, max_length=64)
+    bio: str | None = Field(default=None, max_length=512)
+    email: EmailStr | None = None
 
     _validate_email = field_validator('email')(check_email_availability)
 
@@ -56,3 +59,7 @@ class UserSchema(BaseModel):
     
     class Config:
         from_attributes = True
+
+
+class UserDetailedSchema(UserSchema):
+    bio: str
