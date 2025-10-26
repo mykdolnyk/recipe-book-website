@@ -30,7 +30,7 @@ def get_user_list():
                                              max_per_page=25,
                                              error_out=False)
 
-    user_list = [json.loads(UserSchema.model_validate(user).model_dump_json())
+    user_list = [UserSchema.model_validate(user).model_dump()
                  for user in pagination.items]
 
     return jsonify({
@@ -55,8 +55,7 @@ def register_user():
         logger.exception(e)
         return create_error_response(ErrorCode.UNKNOWN)
 
-    response = json.loads(
-        UserSchema.model_validate(new_user).model_dump_json())
+    response =  UserSchema.model_validate(new_user).model_dump()
 
     return jsonify(response)
 
@@ -68,7 +67,7 @@ def get_user_info(id: int):
     if not user:
         return create_error_response(ErrorCode.USER_NOT_FOUND)
 
-    response = json.loads(UserDetailedSchema.model_validate(user).model_dump_json())
+    response = UserDetailedSchema.model_validate(user).model_dump()
     return jsonify(response)
 
 
@@ -94,7 +93,7 @@ def edit_user(id: int):
         logger.exception(e)
         return create_error_response(ErrorCode.UNKNOWN)
 
-    response = json.loads(UserDetailedSchema.model_validate(user).model_dump_json())
+    response = UserDetailedSchema.model_validate(user).model_dump()
 
     return jsonify(response)
 

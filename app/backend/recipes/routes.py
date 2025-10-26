@@ -32,7 +32,7 @@ def create_recipe():
         logger.exception(e)
         return create_error_response(ErrorCode.UNKNOWN)
 
-    response = json.loads(RecipeSchema.model_validate(recipe).model_dump_json())
+    response = RecipeSchema.model_validate(recipe).model_dump()
     return jsonify(response)
 
 
@@ -46,9 +46,7 @@ def get_recipes_list():
                                        max_per_page=25,
                                        error_out=False)
 
-    recipe_list = [json.loads(RecipeSchema
-                              .model_validate(recipe)
-                              .model_dump_json())
+    recipe_list = [RecipeSchema.model_validate(recipe).model_dump()
                    for recipe in pagination.items]
 
     return jsonify({
@@ -65,8 +63,8 @@ def get_recipe(id: int):
     recipe = Recipe.query.get(id)
     if not recipe:
         abort(404)
-        
-    response = json.loads(RecipeSchema.model_validate(recipe).model_dump_json())
+
+    response = RecipeSchema.model_validate(recipe).model_dump()
     return jsonify(response)
 
 
@@ -76,11 +74,11 @@ def edit_recipe(id: int):
         recipe_schema = RecipeEdit(**request.get_json())
     except ValidationError as error:
         return jsonify({"errors": error.errors(include_url=False, include_context=False)}), 400
-    
+
     recipe = Recipe.query.get(id)
     if not recipe:
         abort(404)
-        
+
     new_data = recipe_schema.model_dump(exclude_unset=True)
     # Update the values of the DB model
     for key, value in new_data.items():
@@ -91,7 +89,7 @@ def edit_recipe(id: int):
     except Exception as e:
         logger.exception(e)
         return create_error_response(ErrorCode.UNKNOWN)
-    
+
     response = RecipeSchema.model_validate(recipe).model_dump()
-    
+
     return jsonify(response)
