@@ -53,6 +53,7 @@ class Recipe(db.Model):
     text: Mapped[str] = mapped_column()
     """The text of the recipe."""
     is_published: Mapped[bool] = mapped_column(default=False)
+    is_visible: Mapped[bool] = mapped_column(default=True, server_default='1')
     
     created_on: Mapped[datetime] = mapped_column(default=datetime.now)
     published_on: Mapped[datetime] = mapped_column(nullable=True)
@@ -62,6 +63,10 @@ class Recipe(db.Model):
     mixes: Mapped[List['RecipeMix']] = relationship(secondary=recipe_mix_association, back_populates='recipes')
     applications: Mapped[List['RecipePublicationApplication']] = relationship(back_populates='recipe')
     likes: Mapped[List['Like']] = relationship(back_populates='recipe')
+    
+    @classmethod
+    def visible(cls):
+        return db.session.query(cls).filter_by(is_visible=True)
     
 
 class RecipeMix(db.Model):

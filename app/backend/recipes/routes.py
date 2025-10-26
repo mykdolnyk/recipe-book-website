@@ -41,10 +41,10 @@ def get_recipes_list():
     page = request.args.get('page', 0)
     per_page = request.args.get('per-page', 5)
 
-    pagination = Recipe.query.paginate(page=page,
-                                       per_page=per_page,
-                                       max_per_page=25,
-                                       error_out=False)
+    pagination = Recipe.visible().paginate(page=page,
+                                           per_page=per_page,
+                                           max_per_page=25,
+                                           error_out=False)
 
     recipe_list = [RecipeSchema.model_validate(recipe).model_dump()
                    for recipe in pagination.items]
@@ -60,7 +60,7 @@ def get_recipes_list():
 
 @recipes_bp.route('/recipes/<int:id>', methods=['GET'])
 def get_recipe(id: int):
-    recipe = Recipe.query.get(id)
+    recipe = Recipe.visible().filter_by(id=id).first()
     if not recipe:
         abort(404)
 
@@ -75,7 +75,7 @@ def edit_recipe(id: int):
     except ValidationError as error:
         return jsonify({"errors": error.errors(include_url=False, include_context=False)}), 400
 
-    recipe = Recipe.query.get(id)
+    recipe = Recipe.visible().filter_by(id=id).first()
     if not recipe:
         abort(404)
 
@@ -93,3 +93,20 @@ def edit_recipe(id: int):
     response = RecipeSchema.model_validate(recipe).model_dump()
 
     return jsonify(response)
+
+
+@recipes_bp.route('/recipes/<int:id>', methods=['DELETE'])
+def delete_recipe(id: int):
+    recipe = Recipe.visible().filter_by(id=id).first()
+    
+    if not recipe:
+        abort(404)
+    
+    recipe.is_visible = False
+    try:
+        db.session.commit()
+    except Exception as e:
+        logger.exception(e)
+        return create_error_response(ErrorCode.UNKNOWN)
+    
+    return '', 204
