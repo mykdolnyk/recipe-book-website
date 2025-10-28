@@ -1,7 +1,7 @@
 from typing import Optional
 from pydantic import BaseModel, Field, computed_field
-from slugify import slugify
-
+from backend.recipes.models import Recipe
+from backend.utils.misc import generate_unique_slug, slugify
 from backend.users.schemas import UserSchema
 
 
@@ -49,7 +49,7 @@ class RecipeCreate(BaseModel):
     @computed_field
     @property
     def slug(self) -> str:
-        return slugify(self.name)
+        return generate_unique_slug(self.name, Recipe)
 
 
 class RecipeEdit(BaseModel):

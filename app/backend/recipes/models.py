@@ -26,21 +26,21 @@ class PeriodType(db.Model):
     """Model representing a type of the meal depending on the time period (e.g., breakfast, lunch, dinner)."""
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column()
-    slug: Mapped[str] = mapped_column()
+    slug: Mapped[str] = mapped_column(unique=True, name='slug')
     recipes: Mapped[List['Recipe']] = relationship(back_populates='period_type')
 
 
 class RecipeTag(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column()
-    slug: Mapped[str] = mapped_column()
+    slug: Mapped[str] = mapped_column(unique=True, name='slug')
     recipes: Mapped[List['Recipe']] = relationship(secondary=recipe_tag_association, back_populates='tags')
 
 
 class Recipe(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column()
-    slug: Mapped[str] = mapped_column()
+    slug: Mapped[str] = mapped_column(unique=True, name='slug')
     author_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
     author: Mapped["User"] = relationship(back_populates='recipes')
     calories: Mapped[int] = mapped_column()
