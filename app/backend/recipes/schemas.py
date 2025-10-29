@@ -1,6 +1,6 @@
 from typing import Optional
-from pydantic import BaseModel, Field, computed_field
-from backend.recipes.models import Recipe
+from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validator
+from backend.recipes.models import PeriodType, Recipe, RecipeTag
 from backend.utils.misc import generate_unique_slug, slugify
 from backend.users.schemas import UserSchema
 
@@ -12,12 +12,22 @@ class PeriodTypeCreate(BaseModel):
     @property
     def slug(self) -> str:
         return slugify(self.name)
+    
+    @model_validator(mode='after')
+    def check_slug_uniqueness(self):
+        if PeriodType.query.filter_by(slug=self.slug).first():
+            raise ValueError('A non-unique slug is generated for this object. ' 
+                             + 'Consider choosing a unique name.')
+        else:
+            return self
 
 
 class PeriodTypeSchema(BaseModel):
     id: int
     name: str
     slug: str
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RecipeTagCreate(BaseModel):
@@ -28,11 +38,23 @@ class RecipeTagCreate(BaseModel):
     def slug(self) -> str:
         return slugify(self.name)
 
+    @model_validator(mode='after')
+    def check_slug_uniqueness(self):
+        if RecipeTag.query.filter_by(slug=self.slug).first():
+            raise ValueError('A non-unique slug is generated for this object. ' 
+                             + 'Consider choosing a unique name.')
+        else:
+            return self
+
+class RecipeTagUpdate(RecipeTagCreate):
+    ...
 
 class RecipeTagSchema(BaseModel):
     id: int
     name: str
     slug: str
+    
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RecipeCreate(BaseModel):
@@ -52,7 +74,7 @@ class RecipeCreate(BaseModel):
         return generate_unique_slug(self.name, Recipe)
 
 
-class RecipeEdit(BaseModel):
+class RecipeUpdate(BaseModel):
     name: Optional[str] = Field(default=None, max_length=64)
     calories: Optional[int] = None
     cooking_time: Optional[int] = None

@@ -4,8 +4,8 @@ from flask import abort, json, jsonify, request
 from pydantic import ValidationError
 from backend.utils.errors import ErrorCode, create_error_response
 from backend.recipes.helpers import create_recipe_instance
-from backend.recipes.models import Recipe
-from backend.recipes.schemas import RecipeCreate, RecipeEdit, RecipeSchema
+from backend.recipes.models import Recipe, RecipeTag
+from backend.recipes.schemas import RecipeCreate, RecipeUpdate, RecipeSchema, RecipeTagCreate, RecipeTagSchema, RecipeTagUpdate
 from app_factory import db
 
 
@@ -37,7 +37,7 @@ def create_recipe():
 
 
 @recipes_bp.route('/recipes', methods=['GET'])
-def get_recipes_list():
+def get_recipe_list():
     page = request.args.get('page', 0)
     per_page = request.args.get('per-page', 5)
 
@@ -71,7 +71,7 @@ def get_recipe(id: int):
 @recipes_bp.route('/recipes/<int:id>', methods=['PUT'])
 def edit_recipe(id: int):
     try:
-        recipe_schema = RecipeEdit(**request.get_json())
+        recipe_schema = RecipeUpdate(**request.get_json())
     except ValidationError as error:
         return jsonify({"errors": error.errors(include_url=False, include_context=False)}), 400
 
@@ -98,15 +98,108 @@ def edit_recipe(id: int):
 @recipes_bp.route('/recipes/<int:id>', methods=['DELETE'])
 def delete_recipe(id: int):
     recipe = Recipe.visible().filter_by(id=id).first()
-    
+
     if not recipe:
         abort(404)
-    
+
     recipe.is_visible = False
     try:
         db.session.commit()
     except Exception as e:
         logger.exception(e)
         return create_error_response(ErrorCode.UNKNOWN)
+
+    return '', 204
+
+
+@recipes_bp.route('/recipe-tags', methods=['GET'])
+def get_recipe_tag_list():
+    page = request.args.get('page', 0)
+    per_page = request.args.get('per-page', 5)
+
+    pagination = RecipeTag.query.paginate(page=page,
+                                          per_page=per_page,
+                                          max_per_page=25,
+                                          error_out=False)
+
+    tag_list = [RecipeTagSchema.model_validate(tag).model_dump()
+                for tag in pagination.items]
+
+    return jsonify({
+        "page": pagination.page,
+        "per_page": pagination.per_page,
+        "total": pagination.total,
+        "pages": pagination.pages,
+        "recipe_tag_list": tag_list
+    })
+
+
+@recipes_bp.route('/recipe-tags/<int:id>', methods=['GET'])
+def get_recipe_tag(id: int):
+    tag = RecipeTag.query.filter_by(id=id).first()
+    if not tag:
+        abort(404)
+
+    response = RecipeTagSchema.model_validate(tag).model_dump()
+    return jsonify(response)
+
+
+@recipes_bp.route('/recipe-tags', methods=['POST'])
+def create_recipe_tag():
+    try:
+        schema = RecipeTagCreate(**request.get_json())
+    except ValidationError as error:
+        return jsonify({"errors": error.errors(include_url=False, include_context=False)}), 400
+
+    new_tag = RecipeTag(**schema.model_dump())
     
+    try:
+        db.session.add(new_tag)
+        db.session.commit()
+    except Exception as exc:
+        logger.exception(exc)
+        return create_error_response(ErrorCode.UNKNOWN)
+    
+    response = RecipeTagSchema.model_validate(new_tag).model_dump()
+
+    return jsonify(response)
+
+
+@recipes_bp.route('/recipe-tags/<int:id>', methods=['PUT'])
+def update_recipe_tag(id: int):
+    try:
+        schema = RecipeTagUpdate(**request.get_json())
+    except ValidationError as error:
+        return jsonify({"errors": error.errors(include_url=False, include_context=False)}), 400
+    
+    tag = RecipeTag.query.filter_by(id=id).first_or_404()
+    
+    new_data = schema.model_dump(exclude_unset=True)
+    for key, value in new_data.items():
+        setattr(tag, key, value)
+        
+    try:
+        db.session.commit()
+    except Exception as e:
+        logger.exception(e)
+        return create_error_response(ErrorCode.UNKNOWN)
+
+    response = RecipeTagSchema.model_validate(tag).model_dump()
+
+    return jsonify(response)
+
+
+@recipes_bp.route('/recipe-tags/<int:id>', methods=['DELETE'])
+def delete_recipe_tag(id: int):
+    tag = RecipeTag.query.filter_by(id=id).first()
+    if not tag:
+        abort(404)
+
+    try:
+        db.session.delete(tag)
+        db.session.commit()
+    except Exception as e:
+        logger.exception(e)
+        return create_error_response(ErrorCode.UNKNOWN)
+
     return '', 204
