@@ -1,5 +1,5 @@
 from typing import Self
-from pydantic import BaseModel, Field, EmailStr, field_validator, model_validator
+from pydantic import BaseModel, Field, EmailStr, computed_field, field_validator, model_validator
 from backend.users.models import User
 from app_factory import password_policy
 import bcrypt
@@ -63,3 +63,34 @@ class UserSchema(BaseModel):
 
 class UserDetailedSchema(UserSchema):
     bio: str
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str = Field(..., max_length=128)
+    
+    @computed_field 
+    @property
+    def user(self) -> User:
+        user = User.active().filter_by(email=self.email).first()
+        return user
+    
+
+    @model_validator(mode='after')
+    def check_credentials(self):
+        if not self.user:
+            raise ValueError("Login credentials are incorrect.")
+        
+        try:
+            credentials_match = bcrypt.checkpw(self.password.encode(), self.user.password.encode())
+        except Exception as exc:
+            print(exc)
+            raise exc
+        
+        if not credentials_match:
+            raise ValueError("Login credentials are incorrect.")
+        
+        return self
+    
+    class Config:
+        arbitrary_types_allowed = True

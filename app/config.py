@@ -1,5 +1,7 @@
 from pathlib import Path
 
+SECRET_KEY = 'not-so-secret-key'
+
 BASE_DIR = Path(__file__).resolve().parent
 
 SQLALCHEMY_DATABASE_URI = "sqlite:///dev.db"

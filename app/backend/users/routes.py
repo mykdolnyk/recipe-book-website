@@ -1,12 +1,12 @@
-import json
+import flask_login
 from logging import getLogger
 from flask.blueprints import Blueprint
 from pydantic import ValidationError
 from backend.users.helpers import create_user_instance
-from backend.users.schemas import UserCreate, UserDetailedSchema, UserEdit, UserSchema
+from backend.users.schemas import UserCreate, UserDetailedSchema, UserEdit, UserLogin, UserSchema
 from backend.users.models import User
 from backend.utils.errors import create_error_response, ErrorCode
-from flask import jsonify, request
+from flask import jsonify, request, session
 from app_factory import db
 
 
@@ -26,9 +26,9 @@ def get_user_list():
     per_page = request.args.get('per-page', 5)
 
     pagination = User.active().paginate(page=page,
-                                             per_page=per_page,
-                                             max_per_page=25,
-                                             error_out=False)
+                                        per_page=per_page,
+                                        max_per_page=25,
+                                        error_out=False)
 
     user_list = [UserSchema.model_validate(user).model_dump()
                  for user in pagination.items]
@@ -55,7 +55,7 @@ def register_user():
         logger.exception(e)
         return create_error_response(ErrorCode.UNKNOWN)
 
-    response =  UserSchema.model_validate(new_user).model_dump()
+    response = UserSchema.model_validate(new_user).model_dump()
 
     return jsonify(response)
 
@@ -117,3 +117,34 @@ def delete_user(id: int):
         return create_error_response(ErrorCode.UNKNOWN)
 
     return '', 204
+
+
+@user_bp.route('/auth/login', methods=['POST'])
+def login():
+    if flask_login.current_user.is_authenticated:
+        return create_error_response('Already logged in.', status_code=200)
+    
+    try:
+        login_schema = UserLogin(**request.get_json())
+    except ValidationError as error:
+        return jsonify({"errors": error.errors(include_url=False, include_context=False)}), 400
+
+    user: User = login_schema.user
+    
+    flask_login.login_user(user)
+
+    response = {
+        'id': user.id
+    }
+
+    return jsonify(response)
+
+
+@user_bp.route('/auth/logout', methods=['POST'])
+def logout():
+    if not flask_login.current_user.is_authenticated:
+        return create_error_response('Already logged out.', status_code=200)
+    
+    flask_login.logout_user()
+
+    return '', 200
