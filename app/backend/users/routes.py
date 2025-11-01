@@ -2,6 +2,7 @@ import flask_login
 from logging import getLogger
 from flask.blueprints import Blueprint
 from pydantic import ValidationError
+from backend.utils.misc import safe_commit
 from backend.utils.login import is_user_or_superuser
 from backend.users.helpers import create_user_instance
 from backend.users.schemas import UserCreate, UserDetailedSchema, UserEdit, UserLogin, UserSchema
@@ -91,12 +92,9 @@ def edit_user(id: int):
     for key, value in new_data.items():
         setattr(user, key, value)
 
-    try:
-        db.session.commit()
-    except Exception as e:
-        logger.exception(e)
-        return create_error_response(ErrorCode.UNKNOWN)
-
+    errors = safe_commit(db, logger)
+    if errors:
+        return errors
     response = UserDetailedSchema.model_validate(user).model_dump()
 
     return jsonify(response)
@@ -117,11 +115,9 @@ def delete_user(id: int):
         abort(403)
 
     user.is_active = False
-    try:
-        db.session.commit()
-    except Exception as e:
-        logger.exception(e)
-        return create_error_response(ErrorCode.UNKNOWN)
+    errors = safe_commit(db, logger)
+    if errors:
+        return errors
 
     return '', 204
 

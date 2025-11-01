@@ -1,5 +1,6 @@
 from slugify import slugify as py_slugify
 from random import randint
+from backend.utils.errors import ErrorCode, create_error_response
 
 
 def slugify(text: str, additional_id: bool = False):
@@ -19,3 +20,14 @@ def generate_unique_slug(text: str, model_class) -> str:
         else:
             break
     return slug
+
+
+def safe_commit(db, logger):
+    """Commits DB changes in a save way, loggin any exceptions into the `logger`.
+    Returns an error repsonse if there was an exception, or `None` if not."""
+    try:
+        db.session.commit()
+        return None
+    except Exception as e:
+        logger.exception(e)
+        return create_error_response(ErrorCode.UNKNOWN)

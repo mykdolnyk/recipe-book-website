@@ -3,6 +3,7 @@ from flask.blueprints import Blueprint
 from flask import abort, json, jsonify, request
 from flask_login import login_required
 from pydantic import ValidationError
+from backend.utils.misc import safe_commit
 from backend.utils.errors import ErrorCode, create_error_response
 from backend.recipes.helpers import create_recipe_instance
 from backend.recipes.models import Recipe, RecipeTag
@@ -89,11 +90,9 @@ def edit_recipe(id: int):
     for key, value in new_data.items():
         setattr(recipe, key, value)
 
-    try:
-        db.session.commit()
-    except Exception as e:
-        logger.exception(e)
-        return create_error_response(ErrorCode.UNKNOWN)
+    errors = safe_commit(db, logger)
+    if errors:
+        return errors
 
     response = RecipeSchema.model_validate(recipe).model_dump()
 
@@ -110,11 +109,9 @@ def delete_recipe(id: int):
         abort(403)
 
     recipe.is_visible = False
-    try:
-        db.session.commit()
-    except Exception as e:
-        logger.exception(e)
-        return create_error_response(ErrorCode.UNKNOWN)
+    errors = safe_commit(db, logger)
+    if errors:
+        return errors
 
     return '', 204
 
@@ -161,12 +158,10 @@ def create_recipe_tag():
 
     new_tag = RecipeTag(**schema.model_dump())
     
-    try:
-        db.session.add(new_tag)
-        db.session.commit()
-    except Exception as exc:
-        logger.exception(exc)
-        return create_error_response(ErrorCode.UNKNOWN)
+    db.session.add(new_tag)
+    errors = safe_commit(db, logger)
+    if errors:
+        return errors
     
     response = RecipeTagSchema.model_validate(new_tag).model_dump()
 
@@ -187,11 +182,9 @@ def update_recipe_tag(id: int):
     for key, value in new_data.items():
         setattr(tag, key, value)
         
-    try:
-        db.session.commit()
-    except Exception as e:
-        logger.exception(e)
-        return create_error_response(ErrorCode.UNKNOWN)
+    errors = safe_commit(db, logger)
+    if errors:
+        return errors
 
     response = RecipeTagSchema.model_validate(tag).model_dump()
 
@@ -205,11 +198,9 @@ def delete_recipe_tag(id: int):
     if not tag:
         abort(404)
 
-    try:
-        db.session.delete(tag)
-        db.session.commit()
-    except Exception as e:
-        logger.exception(e)
-        return create_error_response(ErrorCode.UNKNOWN)
+    db.session.delete(tag)
+    errors = safe_commit(db, logger)
+    if errors:
+        return errors
 
     return '', 204
