@@ -1,14 +1,14 @@
 from logging import getLogger
 from flask.blueprints import Blueprint
 from flask import abort, json, jsonify, request
+from flask_login import login_required
 from pydantic import ValidationError
 from backend.utils.errors import ErrorCode, create_error_response
 from backend.recipes.helpers import create_recipe_instance
 from backend.recipes.models import Recipe, RecipeTag
 from backend.recipes.schemas import RecipeCreate, RecipeUpdate, RecipeSchema, RecipeTagCreate, RecipeTagSchema, RecipeTagUpdate
 from app_factory import db
-
-
+from backend.utils.login import is_user_or_superuser, superuser_only
 logger = getLogger(__name__)
 
 
@@ -20,6 +20,7 @@ recipes_bp = Blueprint(
 
 
 @recipes_bp.route('/recipes', methods=['POST'])
+@login_required
 def create_recipe():
     try:
         recipe_schema = RecipeCreate(**request.get_json())
@@ -78,6 +79,10 @@ def edit_recipe(id: int):
     recipe = Recipe.visible().filter_by(id=id).first()
     if not recipe:
         abort(404)
+        
+    if not is_user_or_superuser(recipe.author):
+        abort(403)
+
 
     new_data = recipe_schema.model_dump(exclude_unset=True)
     # Update the values of the DB model
@@ -98,9 +103,11 @@ def edit_recipe(id: int):
 @recipes_bp.route('/recipes/<int:id>', methods=['DELETE'])
 def delete_recipe(id: int):
     recipe = Recipe.visible().filter_by(id=id).first()
-
     if not recipe:
         abort(404)
+        
+    if not is_user_or_superuser(recipe.author):
+        abort(403)
 
     recipe.is_visible = False
     try:
@@ -145,6 +152,7 @@ def get_recipe_tag(id: int):
 
 
 @recipes_bp.route('/recipe-tags', methods=['POST'])
+@superuser_only
 def create_recipe_tag():
     try:
         schema = RecipeTagCreate(**request.get_json())
@@ -166,6 +174,7 @@ def create_recipe_tag():
 
 
 @recipes_bp.route('/recipe-tags/<int:id>', methods=['PUT'])
+@superuser_only
 def update_recipe_tag(id: int):
     try:
         schema = RecipeTagUpdate(**request.get_json())
@@ -190,6 +199,7 @@ def update_recipe_tag(id: int):
 
 
 @recipes_bp.route('/recipe-tags/<int:id>', methods=['DELETE'])
+@superuser_only
 def delete_recipe_tag(id: int):
     tag = RecipeTag.query.filter_by(id=id).first()
     if not tag:

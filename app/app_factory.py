@@ -1,3 +1,4 @@
+from backend.utils.anon_user import AnonymousUser
 import config
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -38,6 +39,7 @@ def create_app(config_object):
     @login_manager.user_loader
     def user_loader(user_id: str):
         return User.query.get(int(user_id))
+    login_manager.anonymous_user = AnonymousUser
 
     from backend.users.routes import user_bp
     from backend.recipes.routes import recipes_bp

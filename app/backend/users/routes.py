@@ -2,11 +2,12 @@ import flask_login
 from logging import getLogger
 from flask.blueprints import Blueprint
 from pydantic import ValidationError
+from backend.utils.login import is_user_or_superuser
 from backend.users.helpers import create_user_instance
 from backend.users.schemas import UserCreate, UserDetailedSchema, UserEdit, UserLogin, UserSchema
 from backend.users.models import User
 from backend.utils.errors import create_error_response, ErrorCode
-from flask import jsonify, request, session
+from flask import abort, jsonify, request
 from app_factory import db
 
 
@@ -81,6 +82,9 @@ def edit_user(id: int):
     user: User = User.active().filter_by(id=id).first()
     if not user:
         return create_error_response(ErrorCode.USER_NOT_FOUND)
+    
+    if not is_user_or_superuser(user):
+        abort(403)
 
     new_data = user_schema.model_dump(exclude_unset=True)
     # Update the values
@@ -108,6 +112,9 @@ def delete_user(id: int):
 
     if not user:
         return create_error_response(ErrorCode.USER_NOT_FOUND)
+
+    if not is_user_or_superuser(user):
+        abort(403)
 
     user.is_active = False
     try:

@@ -24,6 +24,7 @@ class User(db.Model, UserMixin):
     created_on: Mapped[datetime] = mapped_column(default=datetime.now)
     
     is_active: Mapped[bool] = mapped_column(default=True)
+    is_superuser: Mapped[bool] = mapped_column(default=False, server_default='0')
     
     @classmethod
     def active(cls):
