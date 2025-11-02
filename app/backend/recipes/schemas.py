@@ -1,4 +1,5 @@
 from typing import Optional
+import flask_login
 from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validator
 from backend.recipes.models import PeriodType, Recipe, RecipeTag
 from backend.utils.misc import generate_unique_slug, slugify
@@ -65,13 +66,17 @@ class RecipeCreate(BaseModel):
     text: str = Field(..., max_length=8192)
 
     period_type_id: int
-    author_id: int
     tags: Optional[list[int]] = Field(default_factory=list)
     
     @computed_field
     @property
     def slug(self) -> str:
         return generate_unique_slug(self.name, Recipe)
+    
+    @computed_field
+    @property
+    def author_id(self) -> int:
+        return flask_login.current_user.id
 
 
 class RecipeUpdate(BaseModel):
