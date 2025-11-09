@@ -14,11 +14,13 @@ login_manager = LoginManager()
 password_policy = PasswordPolicy.from_names(**config.PASSWORD_POLICY)
 
 
-def create_app(config_object):
+def create_app(config_object, overrides=None):
     logging_config(config.LOGGING)
     
     app = Flask(__name__)
     app.config.from_object(config_object)
+    if overrides:
+        app.config.update(overrides)
 
     db.init_app(app=app)
     migrate.init_app(app=app, db=db)
