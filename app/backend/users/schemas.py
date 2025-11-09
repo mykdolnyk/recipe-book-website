@@ -1,5 +1,5 @@
 from typing import Self
-from pydantic import BaseModel, Field, EmailStr, computed_field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, EmailStr, computed_field, field_validator, model_validator
 from backend.users.models import User
 from app_factory import password_policy
 import bcrypt
@@ -57,8 +57,7 @@ class UserSchema(BaseModel):
     id: int
     name: str
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserDetailedSchema(UserSchema):
@@ -92,5 +91,5 @@ class UserLogin(BaseModel):
         
         return self
     
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(from_attributes=True,
+                              arbitrary_types_allowed=True)
