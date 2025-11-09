@@ -1,4 +1,5 @@
 import pytest
+from backend.users.models import User
 from backend.users.schemas import UserCreate
 from backend.users.helpers import create_user_instance
 from app_factory import create_app, db
@@ -41,7 +42,7 @@ def test_user():
         password=TEST_PASSWORD,
         password_confirm=TEST_PASSWORD
     )
-    
+
     user = create_user_instance(user_schema=schema)
 
     return user
@@ -55,7 +56,7 @@ def test_user_other():
         password=TEST_PASSWORD,
         password_confirm=TEST_PASSWORD
     )
-    
+
     user = create_user_instance(user_schema=schema)
 
     return user
@@ -69,7 +70,7 @@ def test_inactive_user():
         password=TEST_PASSWORD,
         password_confirm=TEST_PASSWORD
     )
-    
+
     user = create_user_instance(user_schema=schema)
     user.is_active = False
     db.session.commit()
@@ -85,9 +86,58 @@ def test_superuser():
         password=TEST_PASSWORD,
         password_confirm=TEST_PASSWORD
     )
-    
+
     user = create_user_instance(user_schema=schema)
     user.is_superuser = True
     db.session.commit()
 
     return user
+
+
+@pytest.fixture
+def create_users() -> dict[str, list[User]]:
+    """Inserts into the DB a set of 10 active uses, 5 inactive users, 3 superusers"""
+    users: dict[str, list[User]] = {
+        "active": [],
+        "inactive": [],
+        "super": [],
+    }
+
+    # Create usual users:
+    for num in range(10):
+        schema = UserCreate(
+            name=f'Usual User {num}',
+            email=f'user{num}@test.com',
+            password=TEST_PASSWORD,
+            password_confirm=TEST_PASSWORD
+        )
+        user = create_user_instance(user_schema=schema)
+        users['active'].append(user)
+
+    # Create inactive users:
+    for num in range(5):
+        schema = UserCreate(
+            name=f'Inactive User {num}',
+            email=f'inactiveuser{num}@test.com',
+            password=TEST_PASSWORD,
+            password_confirm=TEST_PASSWORD
+        )
+        user = create_user_instance(user_schema=schema)
+        user.is_active = False
+        users['inactive'].append(user)
+    db.session.commit()
+
+    # Create superusers:
+    for num in range(3):
+        schema = UserCreate(
+            name=f'Super User {num}',
+            email=f'superuser{num}@test.com',
+            password=TEST_PASSWORD,
+            password_confirm=TEST_PASSWORD
+        )
+        user = create_user_instance(user_schema=schema)
+        user.is_superuser = True
+        users['super'].append(user)
+    db.session.commit()
+
+    return users

@@ -1,4 +1,6 @@
 from flask.testing import FlaskClient
+from werkzeug.test import TestResponse
+from app.backend.utils.errors import ErrorCode
 from backend.users.models import User
 from conftest import TEST_PASSWORD
 
@@ -186,19 +188,37 @@ def test_edit_user(client: FlaskClient, test_user, test_user_other, test_superus
     assert not User.active().filter_by(name=new_name).first()
 
 
-def test_get_user(client, test_user, test_inactive_user):
-    response = client.get(f'/api/users/{test_user.id}')
+def test_get_user(client: FlaskClient, test_user, test_inactive_user):
+    response: TestResponse = client.get(f'/api/users/{test_user.id}')
     assert response.status_code == 200
+    assert response.get_json()['name'] == test_user.name
+    assert not response.get_json().get('email')
 
     # inactive user 
     response = client.get(f'/api/users/{test_inactive_user.id}')
     assert response.status_code == 400
+    assert response.get_json()['errors'][0]['msg'] == ErrorCode.USER_NOT_FOUND.value
     
-    # unexistent user 
+    # non-existent user 
     response = client.get(f'/api/users/9999')
     assert response.status_code == 400
     
 
-def test_get_user_list(client):
-    response = client.get('/api/users')
+def test_get_user_list(client: FlaskClient, create_users):
+    response: TestResponse = client.get('/api/users')
     assert response.status_code == 200
+    assert response.get_json()['total'] == 13 # Number of users created by the fixture, excluding inactive ones
+    # Checking pagination
+    assert response.get_json()['per_page'] == 5
+    assert response.get_json()['pages'] == 3
+
+    # Exceeding max per page
+    response: TestResponse = client.get('/api/users?per-page=30')
+    assert response.status_code == 200
+    assert response.get_json()['per_page'] == 25
+    assert response.get_json()['pages'] == 1
+    
+    # Incorrect params
+    response: TestResponse = client.get('/api/users?per-page=hello')
+    assert response.status_code == 400
+
