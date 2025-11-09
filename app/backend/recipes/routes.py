@@ -40,8 +40,11 @@ def create_recipe():
 
 @recipes_bp.route('/recipes', methods=['GET'])
 def get_recipe_list():
-    page = request.args.get('page', 0)
-    per_page = request.args.get('per-page', 5)
+    try:
+        page = int(request.args.get('page', 0))
+        per_page = int(request.args.get('per-page', 5))
+    except ValueError:
+        abort(400)
 
     pagination = Recipe.visible().paginate(page=page,
                                            per_page=per_page,
@@ -118,8 +121,11 @@ def delete_recipe(id: int):
 
 @recipes_bp.route('/recipe-tags', methods=['GET'])
 def get_recipe_tag_list():
-    page = request.args.get('page', 0)
-    per_page = request.args.get('per-page', 5)
+    try:
+        page = int(request.args.get('page', 0))
+        per_page = int(request.args.get('per-page', 5))
+    except ValueError:
+        abort(400)
 
     pagination = RecipeTag.query.paginate(page=page,
                                           per_page=per_page,

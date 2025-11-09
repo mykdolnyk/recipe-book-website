@@ -24,8 +24,11 @@ user_bp = Blueprint(
 
 @user_bp.route('/users', methods=['GET'])
 def get_user_list():
-    page = request.args.get('page', 1)
-    per_page = request.args.get('per-page', 5)
+    try:
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per-page', 5))
+    except ValueError:
+        abort(400)
 
     pagination = User.active().paginate(page=page,
                                         per_page=per_page,
