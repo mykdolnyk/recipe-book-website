@@ -3,7 +3,7 @@ from logging import getLogger
 from flask.blueprints import Blueprint
 from pydantic import ValidationError
 from backend.utils.misc import safe_commit
-from backend.utils.login import is_user_or_superuser
+from backend.utils.login import is_owner_or_superuser
 from backend.users.helpers import create_user_instance
 from backend.users.schemas import UserCreate, UserDetailedSchema, UserEdit, UserLogin, UserSchema
 from backend.users.models import User
@@ -84,7 +84,7 @@ def edit_user(id: int):
     if not user:
         return create_error_response(ErrorCode.USER_NOT_FOUND)
     
-    if not is_user_or_superuser(user):
+    if not is_owner_or_superuser(user):
         abort(403)
 
     new_data = user_schema.model_dump(exclude_unset=True)
@@ -111,7 +111,7 @@ def delete_user(id: int):
     if not user:
         return create_error_response(ErrorCode.USER_NOT_FOUND)
 
-    if not is_user_or_superuser(user):
+    if not is_owner_or_superuser(user):
         abort(403)
 
     user.is_active = False
@@ -125,7 +125,7 @@ def delete_user(id: int):
 @user_bp.route('/auth/login', methods=['POST'])
 def login():
     if flask_login.current_user.is_authenticated:
-        return create_error_response('Already logged in.', status_code=200)
+        return create_error_response('Already logged in.', status_code=400)
     
     try:
         login_schema = UserLogin(**request.get_json())

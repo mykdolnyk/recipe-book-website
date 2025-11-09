@@ -17,5 +17,5 @@ def superuser_only(func):
     return decorated_view
 
 
-def is_user_or_superuser(user: User):        
+def is_owner_or_superuser(user: User):        
     return ((current_user == user) or current_user.is_superuser)

@@ -9,7 +9,7 @@ from backend.recipes.helpers import create_recipe_instance
 from backend.recipes.models import Recipe, RecipeTag
 from backend.recipes.schemas import RecipeCreate, RecipeUpdate, RecipeSchema, RecipeTagCreate, RecipeTagSchema, RecipeTagUpdate
 from app_factory import db
-from backend.utils.login import is_user_or_superuser, superuser_only
+from backend.utils.login import is_owner_or_superuser, superuser_only
 logger = getLogger(__name__)
 
 
@@ -81,7 +81,7 @@ def edit_recipe(id: int):
     if not recipe:
         abort(404)
         
-    if not is_user_or_superuser(recipe.author):
+    if not is_owner_or_superuser(recipe.author):
         abort(403)
 
 
@@ -105,7 +105,7 @@ def delete_recipe(id: int):
     if not recipe:
         abort(404)
         
-    if not is_user_or_superuser(recipe.author):
+    if not is_owner_or_superuser(recipe.author):
         abort(403)
 
     recipe.is_visible = False
