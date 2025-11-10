@@ -18,4 +18,4 @@ def superuser_only(func):
 
 
 def is_owner_or_superuser(user: User):        
-    return ((current_user == user) or current_user.is_superuser)
+    return (current_user.is_authenticated and ((current_user == user) or current_user.is_superuser))

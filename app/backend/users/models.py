@@ -29,3 +29,6 @@ class User(db.Model, UserMixin):
     @classmethod
     def active(cls):
         return db.session.query(cls).filter_by(is_active=True)
+
+    def __repr__(self):
+        return f"<User: id={self.id}, name='{self.name}'>"

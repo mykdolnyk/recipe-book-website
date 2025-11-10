@@ -68,6 +68,9 @@ class Recipe(db.Model):
     def visible(cls):
         return db.session.query(cls).filter_by(is_visible=True)
     
+    def __repr__(self):
+        return f"<Recipe: id={self.id}, author_id={self.author_id}>"
+    
 
 class RecipeMix(db.Model):
     """A model representing a mix of several recipes."""
