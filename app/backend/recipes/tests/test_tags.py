@@ -2,7 +2,9 @@ from flask.testing import FlaskClient
 from conftest import TEST_PASSWORD
 
 
-def test_create_tag(app, client: FlaskClient, test_user, test_superuser):
+def test_create_tag(app, client: FlaskClient, test_users):
+    user = test_users['active'][0]
+    superuser = test_users['super'][0]
     # logged-out request
     name = "Tag name"
     response = client.post('/api/recipe-tags', json={
@@ -12,7 +14,7 @@ def test_create_tag(app, client: FlaskClient, test_user, test_superuser):
 
     # logged in as a usual user
     response = client.post('/api/auth/login', json={
-        "email": test_user.email,
+        "email": user.email,
         "password": TEST_PASSWORD,
     })
     response = client.post('/api/recipe-tags', json={
@@ -23,7 +25,7 @@ def test_create_tag(app, client: FlaskClient, test_user, test_superuser):
     # logged in as a superuser
     response = client.post('/api/auth/logout')
     response = client.post('/api/auth/login', json={
-        "email": test_superuser.email,
+        "email": superuser.email,
         "password": TEST_PASSWORD,
     })
     response = client.post('/api/recipe-tags', json={
@@ -33,7 +35,9 @@ def test_create_tag(app, client: FlaskClient, test_user, test_superuser):
     assert response.get_json()['name'] == name
 
 
-def test_edit_tag(client: FlaskClient, test_user, test_superuser, test_recipe_tags):
+def test_edit_tag(client: FlaskClient, test_recipe_tags, test_users):
+    user = test_users['active'][0]
+    superuser = test_users['super'][0]
     tag = test_recipe_tags['visible'][0]
     new_name = "New Tag"
     assert tag.name != new_name
@@ -46,7 +50,7 @@ def test_edit_tag(client: FlaskClient, test_user, test_superuser, test_recipe_ta
 
     # non-superuser logged-in request
     response = client.post('/api/auth/login', json={
-        "email": test_user.email,
+        "email": user.email,
         "password": TEST_PASSWORD,
     })
     response = client.put(f'/api/recipe-tags/{tag.id}', json={
@@ -57,7 +61,7 @@ def test_edit_tag(client: FlaskClient, test_user, test_superuser, test_recipe_ta
     # superuser request
     response = client.post('/api/auth/logout')
     response = client.post('/api/auth/login', json={
-        "email": test_superuser.email,
+        "email": superuser.email,
         "password": TEST_PASSWORD,
     })
     response = client.put(f'/api/recipe-tags/{tag.id}', json={
@@ -99,7 +103,9 @@ def test_get_tag_list(client: FlaskClient, test_recipe_tags):
     assert response.status_code == 400
 
 
-def test_delete_tag(client: FlaskClient, test_user, test_superuser, test_recipe_tags):
+def test_delete_tag(client: FlaskClient, test_recipe_tags, test_users):
+    user = test_users['active'][0]
+    superuser = test_users['super'][0]
     tag = test_recipe_tags['visible'][0]
 
     # non-logged-in request
@@ -108,7 +114,7 @@ def test_delete_tag(client: FlaskClient, test_user, test_superuser, test_recipe_
 
     # non-superuser logged-in request
     response = client.post('/api/auth/login', json={
-        "email": test_user.email,
+        "email": user.email,
         "password": TEST_PASSWORD,
     })
     response = client.delete(f'/api/recipe-tags/{tag.id}')
@@ -117,7 +123,7 @@ def test_delete_tag(client: FlaskClient, test_user, test_superuser, test_recipe_
     # superuser request
     response = client.post('/api/auth/logout')
     response = client.post('/api/auth/login', json={
-        "email": test_superuser.email,
+        "email": superuser.email,
         "password": TEST_PASSWORD,
     })
     response = client.delete(f'/api/recipe-tags/{tag.id}')

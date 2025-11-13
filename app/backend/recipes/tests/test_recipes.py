@@ -31,13 +31,16 @@ def test_create_recipe(client: FlaskClient, logged_in_user):
     assert response.status_code == 401
 
 
-def test_edit_recipe(client: FlaskClient, logged_in_user, test_superuser, test_recipe):
-    new_name = "Tasty meal"
-    assert test_recipe.name != new_name
+def test_edit_recipe(client: FlaskClient, logged_in_user, test_recipes, test_users):
+    superuser = test_users['super'][0]
+    recipe = test_recipes["visible"][0]
 
-    test_recipe.author_id = logged_in_user.id
+    new_name = "Tasty meal"
+    assert recipe.name != new_name
+
+    recipe.author_id = logged_in_user.id
     Recipe.query.session.commit()
-    response = client.put(f'/api/recipes/{test_recipe.id}', json={
+    response = client.put(f'/api/recipes/{recipe.id}', json={
         "name": new_name,
     })
     assert response.status_code == 200
@@ -46,15 +49,15 @@ def test_edit_recipe(client: FlaskClient, logged_in_user, test_superuser, test_r
     # logged-out request
     logout_user()
     new_name = "Forbidden meal"
-    response = client.put(f'/api/recipes/{test_recipe.id}', json={
+    response = client.put(f'/api/recipes/{recipe.id}', json={
         "name": new_name,
     })
     assert response.status_code == 403
 
     # superuser request
-    login_user(test_superuser)
+    login_user(superuser)
     new_name = "Super meal"
-    response = client.put(f'/api/recipes/{test_recipe.id}', json={
+    response = client.put(f'/api/recipes/{recipe.id}', json={
         "name": new_name,
     })
     assert response.status_code == 200
@@ -109,25 +112,27 @@ def test_get_recipe_list(client: FlaskClient, test_recipes):
     assert response.status_code == 400
 
 
-def test_delete_recipe(client: FlaskClient, logged_in_user, test_superuser, test_recipe):
+def test_delete_recipe(client: FlaskClient, logged_in_user, test_recipes, test_users):
+    superuser = test_users['super'][0]
+    recipe = test_recipes["visible"][0]
     # wrong user:
-    response = client.delete(f'/api/recipes/{test_recipe.id}')
+    response = client.delete(f'/api/recipes/{recipe.id}')
     assert response.status_code == 403
 
     # correct user:
-    test_recipe.author_id = logged_in_user.id
+    recipe.author_id = logged_in_user.id
     Recipe.query.session.commit()
-    response = client.delete(f'/api/recipes/{test_recipe.id}')
+    response = client.delete(f'/api/recipes/{recipe.id}')
     assert response.status_code == 204
-    response = client.get(f'/api/recipes/{test_recipe.id}')
+    response = client.get(f'/api/recipes/{recipe.id}')
     assert response.status_code == 404
 
     # un-delete the recipe and delete as a superuser
-    test_recipe.is_visible = True
+    recipe.is_visible = True
     Recipe.query.session.commit()
     logout_user()
-    login_user(test_superuser)
-    response = client.delete(f'/api/recipes/{test_recipe.id}')
+    login_user(superuser)
+    response = client.delete(f'/api/recipes/{recipe.id}')
     assert response.status_code == 204
-    response = client.get(f'/api/recipes/{test_recipe.id}')
+    response = client.get(f'/api/recipes/{recipe.id}')
     assert response.status_code == 404

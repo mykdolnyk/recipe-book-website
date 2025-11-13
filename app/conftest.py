@@ -38,66 +38,6 @@ TEST_PASSWORD = 'r3p[avn!f;1cFGKDS'
 
 
 @pytest.fixture
-def test_user():
-    schema = UserCreate(
-        name='Test User',
-        email='testing@test.com',
-        password=TEST_PASSWORD,
-        password_confirm=TEST_PASSWORD
-    )
-
-    user = create_user_instance(user_schema=schema)
-
-    return user
-
-
-@pytest.fixture
-def test_user_other():
-    schema = UserCreate(
-        name='Another Test User',
-        email='testing2@test.com',
-        password=TEST_PASSWORD,
-        password_confirm=TEST_PASSWORD
-    )
-
-    user = create_user_instance(user_schema=schema)
-
-    return user
-
-
-@pytest.fixture
-def test_inactive_user():
-    schema = UserCreate(
-        name='Inactive User',
-        email='inactivetesting@test.com',
-        password=TEST_PASSWORD,
-        password_confirm=TEST_PASSWORD
-    )
-
-    user = create_user_instance(user_schema=schema)
-    user.is_active = False
-    db.session.commit()
-
-    return user
-
-
-@pytest.fixture
-def test_superuser():
-    schema = UserCreate(
-        name='Super User',
-        email='superuser@test.com',
-        password=TEST_PASSWORD,
-        password_confirm=TEST_PASSWORD
-    )
-
-    user = create_user_instance(user_schema=schema)
-    user.is_superuser = True
-    db.session.commit()
-
-    return user
-
-
-@pytest.fixture
 def test_users() -> dict[str, list[User]]:
     """Inserts into the DB a set of 10 active uses, 5 inactive users, 3 superusers"""
     users: dict[str, list[User]] = {
@@ -155,28 +95,10 @@ def logged_in_user(app):
         password_confirm=TEST_PASSWORD
     )
     user = create_user_instance(user_schema=schema)
-    
+
     with app.test_request_context():
         flask_login.login_user(user)
         yield user
-        
-
-@pytest.fixture
-def test_recipe(app):
-    recipe = Recipe(
-            name="Test Recipe",
-            calories="4",
-            cooking_time="1337",
-            ingredients="Water",
-            text="A very long recipe here",
-            period_type_id=1,
-            author_id=9999,
-            slug=f"test-recipe"
-        )
-    db.session.add(recipe)
-    db.session.commit()
-
-    return recipe
 
 
 @pytest.fixture
@@ -185,7 +107,7 @@ def test_recipes(app):
         'visible': [],
         'hidden': [],
     }
-    
+
     # Visible recipes
     for num in range(10):
         recipe = Recipe(
@@ -197,10 +119,10 @@ def test_recipes(app):
             period_type_id=1,
             author_id=9999,
             slug=f"test-slug-visible-{num}"
-        )        
+        )
         db.session.add(recipe)
         recipes['visible'].append(recipe)
-    
+
     # Hidden recipes
     for num in range(5):
         recipe = Recipe(
@@ -213,10 +135,10 @@ def test_recipes(app):
             author_id=9999,
             slug=f"test-slug-hidden-{num}",
             is_visible=False
-        )          
+        )
         db.session.add(recipe)
         recipes['hidden'].append(recipe)
-        
+
     db.session.commit()
 
     return recipes
@@ -232,10 +154,10 @@ def test_recipe_tags(app):
         recipe = RecipeTag(
             name=f"Recipe Tag {num}",
             slug=f"test-slug-{num}"
-        )        
+        )
         db.session.add(recipe)
         tags['visible'].append(recipe)
-        
+
     db.session.commit()
-    
+
     return tags

@@ -41,9 +41,10 @@ def test_register_user(client: FlaskClient):
     assert User.active().filter_by(email=new_email)
 
 
-def test_login_user(client: FlaskClient, test_user: User):
+def test_login_user(client: FlaskClient, test_users):
+    user = test_users['active'][0]
     response = client.post('/api/auth/login', json={
-        "email": test_user.email,
+        "email": user.email,
         "password": TEST_PASSWORD,
     })
 
@@ -53,7 +54,7 @@ def test_login_user(client: FlaskClient, test_user: User):
 
     # log in again to the same account
     response = client.post('/api/auth/login', json={
-        "email": test_user.email,
+        "email": user.email,
         "password": TEST_PASSWORD,
     })
     assert response.status_code == 400
@@ -61,10 +62,11 @@ def test_login_user(client: FlaskClient, test_user: User):
         assert '_user_id' in session
 
 
-def test_logout_user(client: FlaskClient, test_user: User):
+def test_logout_user(client: FlaskClient, test_users):
+    user = test_users['active'][0]
     # log in first
     response = client.post('/api/auth/login', json={
-        "email": test_user.email,
+        "email": user.email,
         "password": TEST_PASSWORD,
     })
 
@@ -88,61 +90,67 @@ def test_logout_user(client: FlaskClient, test_user: User):
         assert '_user_id' not in session
 
 
-def test_delete_user(client: FlaskClient, test_user, test_user_other, test_superuser):
+def test_delete_user(client: FlaskClient, test_users):
+    user = test_users['active'][0]
+    superuser = test_users['super'][0]
+    other_user = test_users['active'][1]
     # non-logged in user tries to delete
-    response = client.delete(f'/api/users/{test_user.id}?confirm=True')
+    response = client.delete(f'/api/users/{user.id}?confirm=True')
     assert response.status_code == 403
-    assert User.active().filter_by(email=test_user.email).first()
+    assert User.active().filter_by(email=user.email).first()
 
     # log in
     response = client.post('/api/auth/login', json={
-        "email": test_user.email,
+        "email": user.email,
         "password": TEST_PASSWORD,
     })
     # non-confirmed delete
-    response = client.delete(f'/api/users/{test_user.id}')
+    response = client.delete(f'/api/users/{user.id}')
     assert response.status_code == 403
-    assert User.active().filter_by(email=test_user.email).first()
+    assert User.active().filter_by(email=user.email).first()
     # confirmed delete
-    response = client.delete(f'/api/users/{test_user.id}?confirm=True')
+    response = client.delete(f'/api/users/{user.id}?confirm=True')
     assert response.status_code == 204
-    assert not User.active().filter_by(email=test_user.email).first()
+    assert not User.active().filter_by(email=user.email).first()
 
     # restore the user
-    test_user.is_active = True
+    user.is_active = True
     User.query.session.commit()
-    assert User.active().filter_by(email=test_user.email).first()
+    assert User.active().filter_by(email=user.email).first()
     # log out and log in as a superuser
     response = client.post('/api/auth/logout')
     response = client.post('/api/auth/login', json={
-        "email": test_superuser.email,
+        "email": superuser.email,
         "password": TEST_PASSWORD,
     })
     # delete as a superuser
-    response = client.delete(f'/api/users/{test_user.id}?confirm=True')
+    response = client.delete(f'/api/users/{user.id}?confirm=True')
     assert response.status_code == 204
-    assert not User.active().filter_by(email=test_user.email).first()
+    assert not User.active().filter_by(email=user.email).first()
     
     # restore the user
-    test_user.is_active = True
+    user.is_active = True
     User.query.session.commit()
-    assert User.active().filter_by(email=test_user.email).first()
+    assert User.active().filter_by(email=user.email).first()
     # log out and log in as a non-owner non-superuser
     response = client.post('/api/auth/logout')
     response = client.post('/api/auth/login', json={
-        "email": test_user_other.email,
+        "email": other_user.email,
         "password": TEST_PASSWORD,
     })
     # delete as non-owner non-superuser
-    response = client.delete(f'/api/users/{test_user.id}?confirm=True')
+    response = client.delete(f'/api/users/{user.id}?confirm=True')
     assert response.status_code == 403
-    assert User.active().filter_by(email=test_user.email).first()
+    assert User.active().filter_by(email=user.email).first()
 
 
-def test_edit_user(client: FlaskClient, test_user, test_user_other, test_superuser):
+def test_edit_user(client: FlaskClient, test_users):
+    user = test_users['active'][0]
+    superuser = test_users['super'][0]
+    other_user = test_users['active'][1]
     new_name = 'beb'
     # non-logged in user tries to edit
-    response = client.put(f'/api/users/{test_user.id}', json={
+    response = client.put(f'/api/users/{user.id}', json={
         'name': new_name
     })
     assert response.status_code == 403
@@ -150,11 +158,11 @@ def test_edit_user(client: FlaskClient, test_user, test_user_other, test_superus
 
     # log in
     response = client.post('/api/auth/login', json={
-        "email": test_user.email,
+        "email": user.email,
         "password": TEST_PASSWORD,
     })
     # logged-in update
-    response = client.put(f'/api/users/{test_user.id}', json={
+    response = client.put(f'/api/users/{user.id}', json={
         'name': new_name
     })
     assert response.status_code == 200
@@ -163,12 +171,12 @@ def test_edit_user(client: FlaskClient, test_user, test_user_other, test_superus
     # log out and log in as a superuser
     response = client.post('/api/auth/logout')
     response = client.post('/api/auth/login', json={
-        "email": test_superuser.email,
+        "email": superuser.email,
         "password": TEST_PASSWORD,
     })
     # update as a superuser
     newest_name = 'rak'
-    response = client.put(f'/api/users/{test_user.id}', json={
+    response = client.put(f'/api/users/{user.id}', json={
         'name': newest_name
     })
     assert response.status_code == 200
@@ -177,25 +185,27 @@ def test_edit_user(client: FlaskClient, test_user, test_user_other, test_superus
     # log out and log in as a non-owner non-superuser
     response = client.post('/api/auth/logout')
     response = client.post('/api/auth/login', json={
-        "email": test_user_other.email,
+        "email": other_user.email,
         "password": TEST_PASSWORD,
     })
     # update as non-owner non-superuser
-    response = client.put(f'/api/users/{test_user.id}', json={
+    response = client.put(f'/api/users/{user.id}', json={
         'name': new_name
     })
     assert response.status_code == 403
     assert not User.active().filter_by(name=new_name).first()
 
 
-def test_get_user(client: FlaskClient, test_user, test_inactive_user):
-    response: TestResponse = client.get(f'/api/users/{test_user.id}')
+def test_get_user(client: FlaskClient, test_users):
+    user = test_users['active'][0]
+    inactive_user = test_users['inactive'][0]
+    response: TestResponse = client.get(f'/api/users/{user.id}')
     assert response.status_code == 200
-    assert response.get_json()['name'] == test_user.name
+    assert response.get_json()['name'] == user.name
     assert not response.get_json().get('email')
 
     # inactive user 
-    response = client.get(f'/api/users/{test_inactive_user.id}')
+    response = client.get(f'/api/users/{inactive_user.id}')
     assert response.status_code == 400
     assert response.get_json()['errors'][0]['msg'] == ErrorCode.USER_NOT_FOUND.value
     
