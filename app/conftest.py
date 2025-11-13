@@ -220,4 +220,22 @@ def test_set_of_recipes(app):
     db.session.commit()
 
     return recipes
+
+
+@pytest.fixture
+def test_set_of_tags(app):
+    tags: dict[str, list[RecipeTag]] = {
+        'visible': [],
+    }
+
+    for num in range(10):
+        recipe = RecipeTag(
+            name=f"Recipe Tag {num}",
+            slug=f"test-slug-{num}"
+        )        
+        db.session.add(recipe)
+        tags['visible'].append(recipe)
+        
+    db.session.commit()
     
+    return tags
