@@ -91,10 +91,10 @@ def test_get_recipe(client: FlaskClient, logged_in_user):
     # TODO: once recipe publication is implemented, test it
 
 
-def test_get_recipe_list(client: FlaskClient, test_set_of_recipes):
+def test_get_recipe_list(client: FlaskClient, test_recipes):
     response = client.get('/api/recipes')
     assert response.status_code == 200
-    assert response.get_json()["total"] == len(test_set_of_recipes['visible'])
+    assert response.get_json()["total"] == len(test_recipes['visible'])
 
     # Checking pagination
     assert response.get_json()['per_page'] == 5

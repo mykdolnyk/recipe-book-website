@@ -33,8 +33,8 @@ def test_create_tag(app, client: FlaskClient, test_user, test_superuser):
     assert response.get_json()['name'] == name
 
 
-def test_edit_tag(client: FlaskClient, test_user, test_superuser, test_set_of_tags):
-    tag = test_set_of_tags['visible'][0]
+def test_edit_tag(client: FlaskClient, test_user, test_superuser, test_recipe_tags):
+    tag = test_recipe_tags['visible'][0]
     new_name = "New Tag"
     assert tag.name != new_name
 
@@ -67,8 +67,8 @@ def test_edit_tag(client: FlaskClient, test_user, test_superuser, test_set_of_ta
     assert response.get_json()['name'] == new_name
 
 
-def test_get_tag(client: FlaskClient, test_set_of_tags):
-    tag = test_set_of_tags['visible'][0]
+def test_get_tag(client: FlaskClient, test_recipe_tags):
+    tag = test_recipe_tags['visible'][0]
 
     # get a tag
     response = client.get(f'/api/recipe-tags/{tag.id}')
@@ -81,10 +81,10 @@ def test_get_tag(client: FlaskClient, test_set_of_tags):
     assert response.status_code == 404
 
 
-def test_get_tag_list(client: FlaskClient, test_set_of_tags):
+def test_get_tag_list(client: FlaskClient, test_recipe_tags):
     response = client.get('/api/recipe-tags')
     assert response.status_code == 200
-    assert response.get_json()["total"] == len(test_set_of_tags['visible'])
+    assert response.get_json()["total"] == len(test_recipe_tags['visible'])
 
     # Checking pagination
     assert response.get_json()['per_page'] == 5
@@ -99,8 +99,8 @@ def test_get_tag_list(client: FlaskClient, test_set_of_tags):
     assert response.status_code == 400
 
 
-def test_delete_tag(client: FlaskClient, test_user, test_superuser, test_set_of_tags):
-    tag = test_set_of_tags['visible'][0]
+def test_delete_tag(client: FlaskClient, test_user, test_superuser, test_recipe_tags):
+    tag = test_recipe_tags['visible'][0]
 
     # non-logged-in request
     response = client.delete(f'/api/recipe-tags/{tag.id}')

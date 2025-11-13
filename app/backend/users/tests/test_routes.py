@@ -204,7 +204,7 @@ def test_get_user(client: FlaskClient, test_user, test_inactive_user):
     assert response.status_code == 400
     
 
-def test_get_user_list(client: FlaskClient, create_users):
+def test_get_user_list(client: FlaskClient, test_users):
     response: TestResponse = client.get('/api/users')
     assert response.status_code == 200
     assert response.get_json()['total'] == 13 # Number of users created by the fixture, excluding inactive ones

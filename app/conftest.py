@@ -98,7 +98,7 @@ def test_superuser():
 
 
 @pytest.fixture
-def create_users() -> dict[str, list[User]]:
+def test_users() -> dict[str, list[User]]:
     """Inserts into the DB a set of 10 active uses, 5 inactive users, 3 superusers"""
     users: dict[str, list[User]] = {
         "active": [],
@@ -180,7 +180,7 @@ def test_recipe(app):
 
 
 @pytest.fixture
-def test_set_of_recipes(app):
+def test_recipes(app):
     recipes: dict[str, list[Recipe]] = {
         'visible': [],
         'hidden': [],
@@ -223,7 +223,7 @@ def test_set_of_recipes(app):
 
 
 @pytest.fixture
-def test_set_of_tags(app):
+def test_recipe_tags(app):
     tags: dict[str, list[RecipeTag]] = {
         'visible': [],
     }
