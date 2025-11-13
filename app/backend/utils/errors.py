@@ -20,3 +20,14 @@ def create_error_response(*error_messages: ErrorCode|str, status_code=400):
         
     response_dict = {"errors": error_list}
     return jsonify(response_dict), status_code
+
+
+class PasswordRequirements(Enum):
+    """Enum containing password requirement messages."""
+    
+    UPPERCASE = "The password doesn't have enough Uppercase characters"
+    SPECIAL = "The password doesn't have enough Special characters"
+    NUMBERS = "The password doesn't have enough Numerical characters"
+    NONLETTERS = "The password doesn't have enough Non-Letter characters"
+    ENTROPYBITS = "The password is too predictable"
+    STRENGTH = "The password is too weak"

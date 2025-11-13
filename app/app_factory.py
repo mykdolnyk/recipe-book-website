@@ -14,7 +14,7 @@ login_manager = LoginManager()
 password_policy = PasswordPolicy.from_names(**config.PASSWORD_POLICY)
 
 
-def create_app(config_object, overrides=None):
+def create_app(config_object=config, overrides=None):
     logging_config(config.LOGGING)
     
     app = Flask(__name__)

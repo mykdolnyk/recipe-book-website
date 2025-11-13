@@ -11,7 +11,6 @@ PASSWORD_POLICY = {
     'uppercase': 1,
     'numbers': 1,
     'special': 1,
-    'nonletters': 1,
     'entropybits': 20,
     'strength': 0.66,
 }
