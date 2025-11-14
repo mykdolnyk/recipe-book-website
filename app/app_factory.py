@@ -45,6 +45,7 @@ def create_app(config_object=config, overrides=None):
 
     from backend.users.routes import user_bp
     from backend.recipes.routes import recipes_bp
+    import backend.recipes.cli
     app.register_blueprint(user_bp)
     app.register_blueprint(recipes_bp)
 

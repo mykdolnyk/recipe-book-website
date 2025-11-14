@@ -6,8 +6,8 @@ from pydantic import ValidationError
 from backend.utils.misc import safe_commit
 from backend.utils.errors import ErrorCode, create_error_response
 from backend.recipes.helpers import create_recipe_instance
-from backend.recipes.models import Recipe, RecipeTag
-from backend.recipes.schemas import RecipeCreate, RecipeUpdate, RecipeSchema, RecipeTagCreate, RecipeTagSchema, RecipeTagUpdate
+from backend.recipes.models import PeriodType, Recipe, RecipeTag
+from backend.recipes.schemas import PeriodTypeSchema, RecipeCreate, RecipeUpdate, RecipeSchema, RecipeTagCreate, RecipeTagSchema, RecipeTagUpdate
 from app_factory import db
 from backend.utils.login import is_owner_or_superuser, superuser_only
 logger = getLogger(__name__)
@@ -83,10 +83,9 @@ def edit_recipe(id: int):
     recipe = Recipe.visible().filter_by(id=id).first()
     if not recipe:
         abort(404)
-        
+
     if not is_owner_or_superuser(recipe.author):
         abort(403)
-
 
     new_data = recipe_schema.model_dump(exclude_unset=True)
     # Update the values of the DB model
@@ -107,7 +106,7 @@ def delete_recipe(id: int):
     recipe = Recipe.visible().filter_by(id=id).first()
     if not recipe:
         abort(404)
-        
+
     if not is_owner_or_superuser(recipe.author):
         abort(403)
 
@@ -163,12 +162,12 @@ def create_recipe_tag():
         return jsonify({"errors": error.errors(include_url=False, include_context=False)}), 400
 
     new_tag = RecipeTag(**schema.model_dump())
-    
+
     db.session.add(new_tag)
     errors = safe_commit(db, logger)
     if errors:
         return errors
-    
+
     response = RecipeTagSchema.model_validate(new_tag).model_dump()
 
     return jsonify(response)
@@ -181,13 +180,13 @@ def update_recipe_tag(id: int):
         schema = RecipeTagUpdate(**request.get_json())
     except ValidationError as error:
         return jsonify({"errors": error.errors(include_url=False, include_context=False)}), 400
-    
+
     tag = RecipeTag.query.filter_by(id=id).first_or_404()
-    
+
     new_data = schema.model_dump(exclude_unset=True)
     for key, value in new_data.items():
         setattr(tag, key, value)
-        
+
     errors = safe_commit(db, logger)
     if errors:
         return errors
@@ -210,3 +209,41 @@ def delete_recipe_tag(id: int):
         return errors
 
     return '', 204
+
+
+@recipes_bp.route('/recipe-types/', methods=['GET'])
+def get_recipe_type_list():
+    # todo: cache aggresively
+    try:
+        page = int(request.args.get('page', 0))
+        per_page = int(request.args.get('per-page', 10))
+    except ValueError:
+        abort(400)
+
+    pagination = PeriodType.query.paginate(page=page,
+                                           per_page=per_page,
+                                           max_per_page=25,
+                                           error_out=False)
+
+    tag_list = [PeriodTypeSchema.model_validate(rtype).model_dump()
+                for rtype in pagination.items]
+
+    return jsonify({
+        "page": pagination.page,
+        "per_page": pagination.per_page,
+        "total": pagination.total,
+        "pages": pagination.pages,
+        "period_type_list": tag_list
+    })
+
+
+@recipes_bp.route('/recipe-types/<int:id>', methods=['GET'])
+def get_recipe_type(id: int):
+    rtype = PeriodType.visible().filter_by(id=id).first()
+    if not rtype:
+        abort(404)
+
+    response = PeriodTypeSchema.model_validate(rtype).model_dump()
+    return jsonify(response)
+
+
