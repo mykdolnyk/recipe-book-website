@@ -12,7 +12,7 @@ def test_create_recipe(client: FlaskClient, logged_in_user):
         "cooking_time": "1337",
         "ingredients": "Water",
         "text": "A very long recipe here",
-        "period_type_id": 1,
+        "meal_type_id": 1,
     })
     assert response.status_code == 200
     assert response.get_json()['name'] == name
@@ -26,7 +26,7 @@ def test_create_recipe(client: FlaskClient, logged_in_user):
         "cooking_time": "1337",
         "ingredients": "Water",
         "text": "A very long recipe here",
-        "period_type_id": 1,
+        "meal_type_id": 1,
     })
     assert response.status_code == 401
 
@@ -74,7 +74,7 @@ def test_get_recipe(client: FlaskClient, logged_in_user):
         "cooking_time": "1337",
         "ingredients": "Water",
         "text": "A very long recipe here",
-        "period_type_id": 1,
+        "meal_type_id": 1,
     })
 
     recipe_id = response.get_json()['id']

@@ -22,12 +22,12 @@ recipe_mix_association = Table(
     Column('recipe_id', Integer, ForeignKey('recipe.id'))
 )
 
-class PeriodType(db.Model):
+class MealType(db.Model):
     """Model representing a type of the meal depending on the time period (e.g., breakfast, lunch, dinner)."""
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column()
     slug: Mapped[str] = mapped_column(unique=True, name='slug')
-    recipes: Mapped[List['Recipe']] = relationship(back_populates='period_type')
+    recipes: Mapped[List['Recipe']] = relationship(back_populates='meal_type')
 
 
 class RecipeTag(db.Model):
@@ -46,8 +46,8 @@ class Recipe(db.Model):
     calories: Mapped[int] = mapped_column()
     cooking_time: Mapped[int] = mapped_column()
     
-    period_type_id: Mapped[int] = mapped_column(ForeignKey('period_type.id'))
-    period_type: Mapped[PeriodType] = relationship(back_populates='recipes')
+    meal_type_id: Mapped[int] = mapped_column(ForeignKey('meal_type.id'))
+    meal_type: Mapped[MealType] = relationship(back_populates='recipes')
     
     ingredients: Mapped[str] = mapped_column()
     text: Mapped[str] = mapped_column()

@@ -33,7 +33,7 @@ def create_app(config_object=config, overrides=None):
         RecipePublicationApplication,
         RecipeTag,
         Like,
-        PeriodType,
+        MealType,
         recipe_mix_association,
         recipe_tag_association,
     )

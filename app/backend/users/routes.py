@@ -2,7 +2,7 @@ import flask_login
 from logging import getLogger
 from flask.blueprints import Blueprint
 from pydantic import ValidationError
-from app.backend.utils.pagination import paginate
+from backend.utils.pagination import paginate
 from backend.utils.misc import safe_commit
 from backend.utils.login import is_owner_or_superuser
 from backend.users.helpers import create_user_instance

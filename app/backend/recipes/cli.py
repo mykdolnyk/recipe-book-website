@@ -1,6 +1,6 @@
 import click
 from sqlalchemy import delete, func
-from backend.recipes.models import PeriodType
+from backend.recipes.models import MealType
 from backend.recipes.routes import recipes_bp
 from backend.utils.misc import slugify
 from app_factory import db
@@ -9,41 +9,41 @@ from app_factory import db
 recipes_bp.cli.help = 'Perform Recipe-related operations.'
 
 
-@recipes_bp.cli.command('createrecipetype', help='Create a Recipe Type.')
+@recipes_bp.cli.command('createrecipetype', help='Create a Meal Type.')
 @click.argument('name')
-def create_recipe_type(name: str):
-    if PeriodType.query.filter(func.lower(PeriodType.name) == name.lower()).first():
-        click.echo('Recipe Type with such name already exists.')
+def create_meal_type(name: str):
+    if MealType.query.filter(func.lower(MealType.name) == name.lower()).first():
+        click.echo('Meal Type with such name already exists.')
         return False
 
-    recipe_type = PeriodType(
+    meal_type = MealType(
         name=name.title(),
         slug=slugify(name),
     )
-    db.session.add(recipe_type)
+    db.session.add(meal_type)
     db.session.commit()
 
-    click.echo('The Recipe Type has been successfully created.')
+    click.echo('The Meal Type has been successfully created.')
     return True
 
 
-@recipes_bp.cli.command('deleterecipetype', help='Delete a Recipe Type.')
+@recipes_bp.cli.command('deleterecipetype', help='Delete a Meal Type.')
 @click.argument('id')
-def create_recipe_type(id: int):
+def delete_meal_type(id: int):
     if id == "all":
         # Delete all
-        db.session.execute(delete(PeriodType))
+        db.session.execute(delete(MealType))
         db.session.commit()
-        click.echo('All Recipe Types have been successfully deleted.')
+        click.echo('All Meal Types have been successfully deleted.')
         return True
     
-    recipe_type = PeriodType.query.get(id)
-    if not recipe_type:
-        click.echo('Recipe Type with such ID doesn\'t exist.')
+    meal_type = MealType.query.get(id)
+    if not meal_type:
+        click.echo('Meal Type with such ID doesn\'t exist.')
         return False
 
-    db.session.delete(recipe_type)
+    db.session.delete(meal_type)
     db.session.commit()
 
-    click.echo('The Recipe Type has been successfully deleted.')
+    click.echo('The Meal Type has been successfully deleted.')
     return True

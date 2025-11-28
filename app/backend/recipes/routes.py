@@ -8,8 +8,8 @@ from backend.utils.errors import ErrorCode, create_error_response
 from backend.utils.login import is_owner_or_superuser, superuser_only
 from backend.utils.pagination import paginate
 from backend.recipes.helpers import create_recipe_instance
-from backend.recipes.models import PeriodType, Recipe, RecipeTag
-from backend.recipes.schemas import PeriodTypeSchema, RecipeCreate, RecipeUpdate, RecipeSchema, RecipeTagCreate, RecipeTagSchema, RecipeTagUpdate
+from backend.recipes.models import MealType, Recipe, RecipeTag
+from backend.recipes.schemas import MealTypeSchema, RecipeCreate, RecipeUpdate, RecipeSchema, RecipeTagCreate, RecipeTagSchema, RecipeTagUpdate
 from app_factory import db
 logger = getLogger(__name__)
 
@@ -186,26 +186,26 @@ def delete_recipe_tag(id: int):
     return '', 204
 
 
-@recipes_bp.route('/recipe-types/', methods=['GET'])
-def get_recipe_type_list():
+@recipes_bp.route('/meal-types/', methods=['GET'])
+def get_meal_type_list():
     # todo: cache aggresively
     pagination = paginate(
         request_args=request.args,
-        sqlalchemy_query=PeriodType.query,
-        pydantic_model=PeriodTypeSchema,
-        list_name='period_type_list',
+        sqlalchemy_query=MealType.query,
+        pydantic_model=MealTypeSchema,
+        list_name='meal_type_list',
     )
 
     return jsonify(pagination)
 
 
-@recipes_bp.route('/recipe-types/<int:id>', methods=['GET'])
-def get_recipe_type(id: int):
-    rtype = PeriodType.visible().filter_by(id=id).first()
+@recipes_bp.route('/meal-types/<int:id>', methods=['GET'])
+def get_meal_type(id: int):
+    rtype = MealType.visible().filter_by(id=id).first()
     if not rtype:
         abort(404)
 
-    response = PeriodTypeSchema.model_validate(rtype).model_dump()
+    response = MealTypeSchema.model_validate(rtype).model_dump()
     return jsonify(response)
 
 

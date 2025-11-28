@@ -116,7 +116,7 @@ def test_recipes(app):
             cooking_time="1337",
             ingredients="Water",
             text="A very long recipe here",
-            period_type_id=1,
+            meal_type_id=1,
             author_id=9999,
             slug=f"test-slug-visible-{num}"
         )
@@ -131,7 +131,7 @@ def test_recipes(app):
             cooking_time="1337",
             ingredients="Water",
             text="A very long recipe here",
-            period_type_id=1,
+            meal_type_id=1,
             author_id=9999,
             slug=f"test-slug-hidden-{num}",
             is_visible=False

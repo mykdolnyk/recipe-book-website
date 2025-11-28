@@ -1,12 +1,12 @@
 from typing import Optional
 import flask_login
 from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validator
-from backend.recipes.models import PeriodType, Recipe, RecipeTag
+from backend.recipes.models import MealType, Recipe, RecipeTag
 from backend.utils.misc import generate_unique_slug, slugify
 from backend.users.schemas import UserSchema
 
 
-class PeriodTypeCreate(BaseModel):
+class MealTypeCreate(BaseModel):
     name: str
 
     @computed_field
@@ -16,14 +16,14 @@ class PeriodTypeCreate(BaseModel):
     
     @model_validator(mode='after')
     def check_slug_uniqueness(self):
-        if PeriodType.query.filter_by(slug=self.slug).first():
+        if MealType.query.filter_by(slug=self.slug).first():
             raise ValueError('A non-unique slug is generated for this object. ' 
                              + 'Consider choosing a unique name.')
         else:
             return self
 
 
-class PeriodTypeSchema(BaseModel):
+class MealTypeSchema(BaseModel):
     id: int
     name: str
     slug: str
@@ -65,7 +65,7 @@ class RecipeCreate(BaseModel):
     ingredients: str = Field(..., max_length=512)
     text: str = Field(..., max_length=8192)
 
-    period_type_id: int
+    meal_type_id: int
     tags: Optional[list[int]] = Field(default_factory=list)
     
     @computed_field
@@ -86,7 +86,7 @@ class RecipeUpdate(BaseModel):
     ingredients: Optional[str] = Field(default=None, max_length=512)
     text: Optional[str] = Field(default=None, max_length=8192)
 
-    period_type_id: Optional[int] = None
+    meal_type_id: Optional[int] = None
     tags: Optional[list[int]] = Field(default_factory=list)
 
 
@@ -98,7 +98,7 @@ class RecipeSchema(BaseModel):
     ingredients: str
     text: str
 
-    period_type: PeriodTypeSchema | None
+    meal_type: MealTypeSchema | None
     author: UserSchema | None
     tags: list[RecipeTagSchema]
     slug: str
