@@ -5,11 +5,12 @@ from flask_login import login_required
 from pydantic import ValidationError
 from backend.utils.misc import safe_commit
 from backend.utils.errors import ErrorCode, create_error_response
+from backend.utils.login import is_owner_or_superuser, superuser_only
+from backend.utils.pagination import paginate
 from backend.recipes.helpers import create_recipe_instance
 from backend.recipes.models import PeriodType, Recipe, RecipeTag
 from backend.recipes.schemas import PeriodTypeSchema, RecipeCreate, RecipeUpdate, RecipeSchema, RecipeTagCreate, RecipeTagSchema, RecipeTagUpdate
 from app_factory import db
-from backend.utils.login import is_owner_or_superuser, superuser_only
 logger = getLogger(__name__)
 
 
@@ -40,27 +41,14 @@ def create_recipe():
 
 @recipes_bp.route('/recipes', methods=['GET'])
 def get_recipe_list():
-    try:
-        page = int(request.args.get('page', 0))
-        per_page = int(request.args.get('per-page', 5))
-    except ValueError:
-        abort(400)
+    pagination = paginate(
+        request_args=request.args,
+        sqlalchemy_query=Recipe.visible(),
+        pydantic_model=RecipeSchema,
+        list_name='recipe_list',
+    )
 
-    pagination = Recipe.visible().paginate(page=page,
-                                           per_page=per_page,
-                                           max_per_page=25,
-                                           error_out=False)
-
-    recipe_list = [RecipeSchema.model_validate(recipe).model_dump()
-                   for recipe in pagination.items]
-
-    return jsonify({
-        "page": pagination.page,
-        "per_page": pagination.per_page,
-        "total": pagination.total,
-        "pages": pagination.pages,
-        "recipe_list": recipe_list
-    })
+    return jsonify(pagination)
 
 
 @recipes_bp.route('/recipes/<int:id>', methods=['GET'])
@@ -120,27 +108,14 @@ def delete_recipe(id: int):
 
 @recipes_bp.route('/recipe-tags', methods=['GET'])
 def get_recipe_tag_list():
-    try:
-        page = int(request.args.get('page', 0))
-        per_page = int(request.args.get('per-page', 5))
-    except ValueError:
-        abort(400)
+    pagination = paginate(
+        request_args=request.args,
+        sqlalchemy_query=RecipeTag.query,
+        pydantic_model=RecipeTagSchema,
+        list_name='recipe_tag_list',
+    )
 
-    pagination = RecipeTag.query.paginate(page=page,
-                                          per_page=per_page,
-                                          max_per_page=25,
-                                          error_out=False)
-
-    tag_list = [RecipeTagSchema.model_validate(tag).model_dump()
-                for tag in pagination.items]
-
-    return jsonify({
-        "page": pagination.page,
-        "per_page": pagination.per_page,
-        "total": pagination.total,
-        "pages": pagination.pages,
-        "recipe_tag_list": tag_list
-    })
+    return jsonify(pagination)
 
 
 @recipes_bp.route('/recipe-tags/<int:id>', methods=['GET'])
@@ -214,27 +189,14 @@ def delete_recipe_tag(id: int):
 @recipes_bp.route('/recipe-types/', methods=['GET'])
 def get_recipe_type_list():
     # todo: cache aggresively
-    try:
-        page = int(request.args.get('page', 0))
-        per_page = int(request.args.get('per-page', 10))
-    except ValueError:
-        abort(400)
+    pagination = paginate(
+        request_args=request.args,
+        sqlalchemy_query=PeriodType.query,
+        pydantic_model=PeriodTypeSchema,
+        list_name='period_type_list',
+    )
 
-    pagination = PeriodType.query.paginate(page=page,
-                                           per_page=per_page,
-                                           max_per_page=25,
-                                           error_out=False)
-
-    tag_list = [PeriodTypeSchema.model_validate(rtype).model_dump()
-                for rtype in pagination.items]
-
-    return jsonify({
-        "page": pagination.page,
-        "per_page": pagination.per_page,
-        "total": pagination.total,
-        "pages": pagination.pages,
-        "period_type_list": tag_list
-    })
+    return jsonify(pagination)
 
 
 @recipes_bp.route('/recipe-types/<int:id>', methods=['GET'])

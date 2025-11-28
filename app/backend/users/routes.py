@@ -2,6 +2,7 @@ import flask_login
 from logging import getLogger
 from flask.blueprints import Blueprint
 from pydantic import ValidationError
+from app.backend.utils.pagination import paginate
 from backend.utils.misc import safe_commit
 from backend.utils.login import is_owner_or_superuser
 from backend.users.helpers import create_user_instance
@@ -24,27 +25,14 @@ user_bp = Blueprint(
 
 @user_bp.route('/users', methods=['GET'])
 def get_user_list():
-    try:
-        page = int(request.args.get('page', 1))
-        per_page = int(request.args.get('per-page', 5))
-    except ValueError:
-        abort(400)
+    pagination = paginate(
+        request_args=request.args,
+        sqlalchemy_query=User.active(),
+        pydantic_model=UserSchema,
+        list_name='user_list',
+    )
 
-    pagination = User.active().paginate(page=page,
-                                        per_page=per_page,
-                                        max_per_page=25,
-                                        error_out=False)
-
-    user_list = [UserSchema.model_validate(user).model_dump()
-                 for user in pagination.items]
-
-    return jsonify({
-        "page": pagination.page,
-        "per_page": pagination.per_page,
-        "total": pagination.total,
-        "pages": pagination.pages,
-        "user_list": user_list
-    })
+    return jsonify(pagination)
 
 
 @user_bp.route('/users', methods=["POST"])
