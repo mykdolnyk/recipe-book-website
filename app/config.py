@@ -6,6 +6,8 @@ BASE_DIR = Path(__file__).resolve().parent
 
 SQLALCHEMY_DATABASE_URI = "sqlite:///dev.db"
 
+FIXTURES_DIR = Path('fixtures')
+
 PASSWORD_POLICY = {
     'length': 8,
     'uppercase': 1,
