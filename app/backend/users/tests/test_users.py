@@ -1,6 +1,6 @@
 from flask.testing import FlaskClient
 from werkzeug.test import TestResponse
-from app.backend.utils.errors import ErrorCode
+from backend.utils.errors import ErrorCode
 from backend.users.models import User
 from conftest import TEST_PASSWORD
 
