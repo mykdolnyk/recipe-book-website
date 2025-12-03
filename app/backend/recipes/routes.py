@@ -201,11 +201,11 @@ def get_meal_type_list():
 
 @recipes_bp.route('/meal-types/<int:id>', methods=['GET'])
 def get_meal_type(id: int):
-    rtype = MealType.visible().filter_by(id=id).first()
-    if not rtype:
+    mtype = MealType.query.filter_by(id=id).first()
+    if not mtype:
         abort(404)
 
-    response = MealTypeSchema.model_validate(rtype).model_dump()
+    response = MealTypeSchema.model_validate(mtype).model_dump()
     return jsonify(response)
 
 

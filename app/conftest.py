@@ -1,5 +1,6 @@
 import flask_login
 import pytest
+from backend.utils.fixtures import load_fixtures
 from backend.recipes.models import Recipe, RecipeTag
 from backend.recipes.schemas import RecipeCreate, RecipeTagCreate
 from backend.users.models import User
@@ -7,6 +8,7 @@ from backend.users.schemas import UserCreate
 from backend.users.helpers import create_user_instance
 from app_factory import create_app, db
 import config
+from click.testing import CliRunner
 
 
 @pytest.fixture
@@ -19,6 +21,7 @@ def app():
 
     with app.app_context():
         db.create_all()
+        load_fixtures()
         yield app
         db.session.remove()
         db.drop_all()
@@ -30,7 +33,7 @@ def client(app):
 
 
 @pytest.fixture
-def runner(app):
+def runner(app) -> CliRunner:
     return app.test_cli_runner()
 
 

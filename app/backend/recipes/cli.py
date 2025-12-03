@@ -37,10 +37,9 @@ def delete_meal_type(id: int):
         click.echo('All Meal Types have been successfully deleted.')
         return True
     
-    meal_type = MealType.query.get(id)
+    meal_type = MealType.query.filter_by(id=id).first()
     if not meal_type:
-        click.echo('Meal Type with such ID doesn\'t exist.')
-        return False
+        click.ClickException('Meal Type with such ID doesn\'t exist.')
 
     db.session.delete(meal_type)
     db.session.commit()
