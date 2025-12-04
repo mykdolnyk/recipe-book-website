@@ -1,6 +1,6 @@
 from datetime import datetime
 import enum
-from typing import List, TYPE_CHECKING
+from typing import List, TYPE_CHECKING, Optional
 from app_factory import db
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Column, ForeignKey, Integer, Table
@@ -96,7 +96,7 @@ class RecipePublicationApplication(db.Model):
     created_on: Mapped[datetime] = mapped_column(default=datetime.now)
     status: Mapped[int] = mapped_column(default=STATUSES.NOT_REVIEWED)
     last_reviewed_by: Mapped["User"] = relationship(back_populates='reviewed_applications')
-    last_reviewed_by_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
+    last_reviewed_by_id: Mapped[Optional[int]] = mapped_column(ForeignKey('user.id'))
 
 
 class Like(db.Model):

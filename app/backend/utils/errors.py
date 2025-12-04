@@ -7,6 +7,7 @@ class ErrorCode(Enum):
     
     USER_NOT_FOUND = "User with such ID doesn't exist."
     UNKNOWN = "An unknown error has occured."
+    ALREADY_EXISTS = "Such object already exists."
 
 
 def create_error_response(*error_messages: ErrorCode|str, status_code=400):

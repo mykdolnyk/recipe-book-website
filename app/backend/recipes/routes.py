@@ -3,12 +3,15 @@ from flask.blueprints import Blueprint
 from flask import abort, json, jsonify, request
 from flask_login import login_required
 from pydantic import ValidationError
-from backend.utils.misc import safe_commit
+from backend.utils.misc import create_object_from_request, parse_to_schema, safe_commit
 from backend.utils.errors import ErrorCode, create_error_response
 from backend.utils.login import is_owner_or_superuser, superuser_only
 from backend.utils.pagination import paginate
 from backend.recipes.helpers import create_recipe_instance
 from backend.recipes.models import MealType, Recipe, RecipeTag
+from backend.recipes.models import RecipePublicationApplication as RecipeApp
+from backend.recipes.schemas import RecipePublicationApplicationCreate as RecipeAppCreate
+from backend.recipes.schemas import RecipePublicationApplicationSchema as RecipeAppSchema
 from backend.recipes.schemas import MealTypeSchema, RecipeCreate, RecipeUpdate, RecipeSchema, RecipeTagCreate, RecipeTagSchema, RecipeTagUpdate
 from app_factory import db
 logger = getLogger(__name__)
@@ -104,6 +107,32 @@ def delete_recipe(id: int):
         return errors
 
     return '', 204
+
+
+@recipes_bp.route('/recipes/<int:id>/publish', methods=['POST'])
+def publish_recipe(id: int):
+    recipe = Recipe.visible().filter_by(id=id).first()
+    if not recipe:
+        abort(404)
+    
+    application = RecipeApp.query.filter(
+        RecipeApp.recipe == recipe,
+        RecipeApp.status == RecipeApp.STATUSES.NOT_REVIEWED,
+    ).first()
+    # If not reviewed application for the recipe already exists
+    if application:
+        return create_error_response(ErrorCode.ALREADY_EXISTS, status_code=409)
+
+    response = create_object_from_request(
+        request=request,
+        db_model=RecipeApp,
+        create_schema=RecipeAppCreate,
+        get_schema=RecipeAppSchema,
+        db=db,
+        logger=logger,
+    )
+    
+    return jsonify(response)
 
 
 @recipes_bp.route('/recipe-tags', methods=['GET'])

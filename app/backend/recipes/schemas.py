@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 import flask_login
 from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validator
@@ -102,5 +103,21 @@ class RecipeSchema(BaseModel):
     author: UserSchema | None
     tags: list[RecipeTagSchema]
     slug: str
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RecipePublicationApplicationCreate(BaseModel):
+    recipe_id: int
+    comment: str
+    
+    
+class RecipePublicationApplicationSchema(BaseModel):
+    id: int
+    recipe_id: int
+    comment: str
+    created_on: datetime
+    status: int
+    last_reviewed_by_id: int | None
     
     model_config = ConfigDict(from_attributes=True)
