@@ -3,9 +3,8 @@ from logging import getLogger
 from flask.blueprints import Blueprint
 from pydantic import ValidationError
 from backend.utils.pagination import paginate
-from backend.utils.misc import safe_commit
+from backend.utils.misc import create_object_from_dict, safe_commit
 from backend.utils.login import is_owner_or_superuser
-from backend.users.helpers import create_user_instance
 from backend.users.schemas import UserCreate, UserDetailedSchema, UserEdit, UserLogin, UserSchema
 from backend.users.models import User
 from backend.utils.errors import create_error_response, ErrorCode
@@ -37,20 +36,16 @@ def get_user_list():
 
 @user_bp.route('/users', methods=["POST"])
 def register_user():
-    try:
-        user_schema = UserCreate(**request.get_json())
-    except ValidationError as error:
-        return jsonify({"errors": error.errors(include_url=False, include_context=False)}), 400
-
-    try:
-        new_user = create_user_instance(user_schema)
-    except Exception as e:
-        logger.exception(e)
-        return create_error_response(ErrorCode.UNKNOWN)
-
-    response = UserSchema.model_validate(new_user).model_dump()
-
-    return jsonify(response)
+    response = create_object_from_dict(
+        data=request.get_json(),
+        db_model=User,
+        exclude_for_db=['password_confirm'],
+        create_schema=UserCreate,
+        get_schema=UserSchema,
+        db=db,
+        logger=logger
+    )
+    return response
 
 
 @user_bp.route('/users/<int:id>', methods=["GET"])

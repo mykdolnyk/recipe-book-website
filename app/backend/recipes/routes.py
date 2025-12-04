@@ -1,13 +1,12 @@
 from logging import getLogger
 from flask.blueprints import Blueprint
-from flask import abort, json, jsonify, request
+from flask import abort, jsonify, request
 from flask_login import login_required
 from pydantic import ValidationError
-from backend.utils.misc import create_object_from_request, parse_to_schema, safe_commit
+from backend.utils.misc import create_object_from_dict, safe_commit
 from backend.utils.errors import ErrorCode, create_error_response
 from backend.utils.login import is_owner_or_superuser, superuser_only
 from backend.utils.pagination import paginate
-from backend.recipes.helpers import create_recipe_instance
 from backend.recipes.models import MealType, Recipe, RecipeTag
 from backend.recipes.models import RecipePublicationApplication as RecipeApp
 from backend.recipes.schemas import RecipePublicationApplicationCreate as RecipeAppCreate
@@ -27,19 +26,15 @@ recipes_bp = Blueprint(
 @recipes_bp.route('/recipes', methods=['POST'])
 @login_required
 def create_recipe():
-    try:
-        recipe_schema = RecipeCreate(**request.get_json())
-    except ValidationError as error:
-        return jsonify({"errors": error.errors(include_url=False, include_context=False)}), 400
-
-    try:
-        recipe = create_recipe_instance(recipe_schema)
-    except Exception as e:
-        logger.exception(e)
-        return create_error_response(ErrorCode.UNKNOWN)
-
-    response = RecipeSchema.model_validate(recipe).model_dump()
-    return jsonify(response)
+    response = create_object_from_dict(
+        data=request.get_json(),
+        db_model=Recipe,
+        create_schema=RecipeCreate,
+        get_schema=RecipeSchema,
+        db=db,
+        logger=logger
+    )
+    return response
 
 
 @recipes_bp.route('/recipes', methods=['GET'])
@@ -123,8 +118,8 @@ def publish_recipe(id: int):
     if application:
         return create_error_response(ErrorCode.ALREADY_EXISTS, status_code=409)
 
-    response = create_object_from_request(
-        request=request,
+    response = create_object_from_dict(
+        data=request.get_json(),
         db_model=RecipeApp,
         create_schema=RecipeAppCreate,
         get_schema=RecipeAppSchema,
@@ -160,21 +155,15 @@ def get_recipe_tag(id: int):
 @recipes_bp.route('/recipe-tags', methods=['POST'])
 @superuser_only
 def create_recipe_tag():
-    try:
-        schema = RecipeTagCreate(**request.get_json())
-    except ValidationError as error:
-        return jsonify({"errors": error.errors(include_url=False, include_context=False)}), 400
-
-    new_tag = RecipeTag(**schema.model_dump())
-
-    db.session.add(new_tag)
-    errors = safe_commit(db, logger)
-    if errors:
-        return errors
-
-    response = RecipeTagSchema.model_validate(new_tag).model_dump()
-
-    return jsonify(response)
+    response = create_object_from_dict(
+        data=request.get_json(),
+        db_model=RecipeTag,
+        create_schema=RecipeTagCreate,
+        get_schema=RecipeTagSchema,
+        db=db,
+        logger=logger
+    )
+    return response
 
 
 @recipes_bp.route('/recipe-tags/<int:id>', methods=['PUT'])
