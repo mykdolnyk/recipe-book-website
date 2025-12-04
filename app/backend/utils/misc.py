@@ -1,3 +1,5 @@
+from flask import abort, jsonify
+from pydantic import BaseModel, ValidationError
 from slugify import slugify as py_slugify
 from random import randint
 from backend.utils.errors import ErrorCode, create_error_response
@@ -31,3 +33,28 @@ def safe_commit(db, logger):
     except Exception as e:
         logger.exception(e)
         return create_error_response(ErrorCode.UNKNOWN)
+    
+    
+def parse_to_schema(schema_class: BaseModel, request):
+    """Parses the data from the `request` object and returns the schema. If
+    the data is invalid, aborts with an error dict."""
+    try:
+        return schema_class(**request.get_json())
+    except ValidationError as error:
+        abort(jsonify({"errors": error.errors(include_url=False, include_context=False)}), 400)
+    
+    
+def create_object_from_request(request, db_model, create_schema, get_schema, db, logger):
+    schema = parse_to_schema(schema_class=create_schema, 
+                             request=request)
+    
+    new_object = db_model(**schema.model_dump())
+    
+    db.session.add(new_object)
+    error_response = safe_commit(db, logger)
+    if error_response:
+        return error_response
+
+    response = get_schema.model_validate(new_object).model_dump()
+    
+    return response
