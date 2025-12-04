@@ -2,7 +2,6 @@ import flask_login
 import pytest
 from backend.utils.fixtures import load_fixtures
 from backend.recipes.models import Recipe, RecipeTag
-from backend.recipes.schemas import RecipeCreate, RecipeTagCreate
 from backend.users.models import User
 from backend.users.schemas import UserCreate
 from backend.users.helpers import create_user_instance

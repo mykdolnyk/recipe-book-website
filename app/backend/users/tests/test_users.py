@@ -210,7 +210,7 @@ def test_get_user(client: FlaskClient, test_users):
     assert response.get_json()['errors'][0]['msg'] == ErrorCode.USER_NOT_FOUND.value
     
     # non-existent user 
-    response = client.get(f'/api/users/9999')
+    response = client.get('/api/users/9999')
     assert response.status_code == 400
     
 
