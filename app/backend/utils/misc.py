@@ -58,3 +58,26 @@ def create_object_from_dict(data: dict, db_model, create_schema,
     # Get a response
     response = get_schema.model_validate(new_object).model_dump()
     return jsonify(response), 200
+
+
+def update_object_from_dict(obj, data: dict, update_schema,
+                            get_schema, db, logger) -> Tuple[Response, int]:
+    # Get and validate schema
+    try:
+        schema = update_schema(**data)
+    except ValidationError as error:
+        return jsonify({"errors": error.errors(include_url=False, include_context=False)}), 400
+
+    # Update DB object
+    new_data = schema.model_dump(exclude_unset=True)
+    for key, value in new_data.items():
+        setattr(obj, key, value)
+    
+    error_response = safe_commit(db, logger)
+    # If errors occur during the commit - return error response
+    if error_response:
+        return error_response
+
+    # Get a response
+    response = get_schema.model_validate(obj).model_dump()
+    return jsonify(response), 200
