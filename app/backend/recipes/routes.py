@@ -42,7 +42,7 @@ def create_recipe():
 def get_recipe_list():
     pagination = paginate(
         request_args=request.args,
-        sqlalchemy_query=Recipe.visible(),
+        sqlalchemy_query=Recipe.ua_query(),
         pydantic_model=RecipeSchema,
         list_name='recipe_list',
     )
@@ -52,7 +52,7 @@ def get_recipe_list():
 
 @recipes_bp.route('/recipes/<int:id>', methods=['GET'])
 def get_recipe(id: int):
-    recipe = Recipe.visible().filter_by(id=id).first()
+    recipe = Recipe.ua_query().filter_by(id=id).first()
     if not recipe:
         abort(404)
 
@@ -63,7 +63,7 @@ def get_recipe(id: int):
 @recipes_bp.route('/recipes/<int:id>/detailed', methods=['GET'])
 @superuser_only
 def get_recipe_detailed(id: int):
-    recipe = Recipe.visible().filter_by(id=id).first()
+    recipe = Recipe.ua_query().filter_by(id=id).first()
     if not recipe:
         abort(404)
 
@@ -101,7 +101,7 @@ def edit_recipe(id: int):
 
 @recipes_bp.route('/recipes/<int:id>', methods=['DELETE'])
 def delete_recipe(id: int):
-    recipe = Recipe.visible().filter_by(id=id).first()
+    recipe = Recipe.ua_query().filter_by(id=id).first()
     if not recipe:
         abort(404)
 

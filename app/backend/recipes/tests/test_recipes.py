@@ -135,4 +135,7 @@ def test_delete_recipe(client: FlaskClient, logged_in_user, test_recipes, test_u
     response = client.delete(f'/api/recipes/{recipe.id}')
     assert response.status_code == 204
     response = client.get(f'/api/recipes/{recipe.id}')
+    assert response.status_code == 200
+    logout_user()
+    response = client.get(f'/api/recipes/{recipe.id}')
     assert response.status_code == 404

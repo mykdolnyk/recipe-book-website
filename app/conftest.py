@@ -120,7 +120,8 @@ def test_recipes(app):
             text="A very long recipe here",
             meal_type_id=1,
             author_id=9999,
-            slug=f"test-slug-visible-{num}"
+            slug=f"test-slug-visible-{num}",
+            is_published=True
         )
         db.session.add(recipe)
         recipes['visible'].append(recipe)
