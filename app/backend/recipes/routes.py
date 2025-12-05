@@ -1,16 +1,17 @@
 from logging import getLogger
 from flask.blueprints import Blueprint
 from flask import abort, jsonify, request
-from flask_login import login_required
+from flask_login import current_user, login_required
 from pydantic import ValidationError
-from backend.utils.misc import create_object_from_dict, safe_commit
+from backend.utils.misc import create_object_from_dict, safe_commit, update_object_from_dict
 from backend.utils.errors import ErrorCode, create_error_response
 from backend.utils.login import is_owner_or_superuser, superuser_only
 from backend.utils.pagination import paginate
 from backend.recipes.models import MealType, Recipe, RecipeTag
 from backend.recipes.models import RecipePublicationApplication as RecipeApp
-from backend.recipes.schemas import RecipePublicationApplicationCreate as RecipeAppCreate
+from backend.recipes.schemas import RecipeDetailedSchema, RecipePublicationApplicationCreate as RecipeAppCreate, RecipeUpdateStatus
 from backend.recipes.schemas import RecipePublicationApplicationSchema as RecipeAppSchema
+from backend.recipes.schemas import RecipePublicationApplicationUpdate as RecipeAppUpdate
 from backend.recipes.schemas import MealTypeSchema, RecipeCreate, RecipeUpdate, RecipeSchema, RecipeTagCreate, RecipeTagSchema, RecipeTagUpdate
 from app_factory import db
 logger = getLogger(__name__)
@@ -56,6 +57,17 @@ def get_recipe(id: int):
         abort(404)
 
     response = RecipeSchema.model_validate(recipe).model_dump()
+    return jsonify(response)
+
+
+@recipes_bp.route('/recipes/<int:id>/detailed', methods=['GET'])
+@superuser_only
+def get_recipe_detailed(id: int):
+    recipe = Recipe.visible().filter_by(id=id).first()
+    if not recipe:
+        abort(404)
+
+    response = RecipeDetailedSchema.model_validate(recipe).model_dump()
     return jsonify(response)
 
 
@@ -127,7 +139,82 @@ def publish_recipe(id: int):
         logger=logger,
     )
     
+    return response
+
+
+@recipes_bp.route('/recipes/applications', methods=['GET'])
+def get_recipe_application_list():
+    if current_user.is_superuser:
+        query = RecipeApp.query
+    else:
+        # only the current user's applications
+        query = RecipeApp.query.filter(
+            RecipeApp.recipe.has(author_id=current_user.id) 
+        )
+    
+    pagination = paginate(
+        request_args=request.args,
+        sqlalchemy_query=query,
+        pydantic_model=RecipeAppSchema,
+        list_name='recipe_publication_application_list',
+    )
+
+    return jsonify(pagination)
+
+
+@recipes_bp.route('/recipes/applications/<int:id>', methods=['GET'])
+def get_recipe_application(id: int):
+    if current_user.is_superuser:
+        query = RecipeApp.query
+    else:
+        # only the current user's applications
+        query = RecipeApp.query.filter(
+            RecipeApp.recipe.has(author_id=current_user.id) 
+    )
+    
+    application = query.filter_by(id=id).first()
+    if not application:
+        abort(404)
+
+    response = RecipeAppSchema.model_validate(application).model_dump()
     return jsonify(response)
+
+
+@recipes_bp.route('/recipes/applications/<int:id>', methods=['PUT'])
+@superuser_only
+def update_recipe_application(id: int):
+    application = RecipeApp.query.filter_by(id=id).first()
+    if not application:
+        abort(404)
+        
+    response = update_object_from_dict(
+        obj=application,
+        data=request.get_json(),
+        update_schema=RecipeAppUpdate,
+        get_schema=RecipeAppSchema,
+        db=db,
+        logger=logger,
+    )
+    
+    return response
+
+
+@recipes_bp.route('/recipes/<int:id>/status', methods=['PUT'])
+@superuser_only
+def change_recipe_status(id: int):
+    recipe = Recipe.query.filter_by(id=id).first()
+    if not recipe:
+        abort(404)
+        
+    response = update_object_from_dict(
+        obj=recipe,
+        data=request.get_json(),
+        update_schema=RecipeUpdateStatus,
+        get_schema=RecipeDetailedSchema,
+        db=db,
+        logger=logger,
+    )
+    return response
 
 
 @recipes_bp.route('/recipe-tags', methods=['GET'])

@@ -91,6 +91,11 @@ class RecipeUpdate(BaseModel):
     tags: Optional[list[int]] = Field(default_factory=list)
 
 
+class RecipeUpdateStatus(BaseModel):
+    is_visible: Optional[bool] = None
+    is_published: Optional[bool] = None
+
+
 class RecipeSchema(BaseModel):
     id: int
     name: str
@@ -105,6 +110,11 @@ class RecipeSchema(BaseModel):
     slug: str
     
     model_config = ConfigDict(from_attributes=True)
+    
+
+class RecipeDetailedSchema(RecipeSchema):
+    is_published: bool
+    is_visible: bool
 
 
 class RecipePublicationApplicationCreate(BaseModel):
@@ -121,3 +131,7 @@ class RecipePublicationApplicationSchema(BaseModel):
     last_reviewed_by_id: int | None
     
     model_config = ConfigDict(from_attributes=True)
+
+
+class RecipePublicationApplicationUpdate(BaseModel):
+    status: Optional[int]
