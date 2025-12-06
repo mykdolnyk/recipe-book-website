@@ -1,9 +1,12 @@
-from typing import Tuple
-from flask import Response, jsonify
-from pydantic import ValidationError
+from logging import getLogger
+from flask import jsonify
+from pydantic import BaseModel, ValidationError
 from slugify import slugify as py_slugify
 from random import randint
-from backend.utils.errors import ErrorCode, create_error_response
+from backend.utils.errors import create_error_response
+
+
+logger = getLogger(name=__name__)
 
 
 def slugify(text: str, additional_id: bool = False):
@@ -25,7 +28,7 @@ def generate_unique_slug(text: str, model_class) -> str:
     return slug
 
 
-def safe_commit(session, logger):
+def safe_commit(session):
     """Commits DB changes in a save way, loggin any exceptions into the `logger`.
     Reraises an exception if there was one, or returns `None` if not."""
     try:
@@ -38,19 +41,17 @@ def safe_commit(session, logger):
 
 
 class ObjectManager:
-    def __init__(self, db_model, logger, create_schema=None, update_schema=None, get_schema=None):
+    def __init__(self, db_model, create_schema=None, update_schema=None, get_schema=None):
         self.db_model = db_model
-        self.create_schema = create_schema
-        self.update_schema = update_schema
-        self.get_schema = get_schema
+        self.create_schema: BaseModel = create_schema
+        self.update_schema: BaseModel = update_schema
+        self.get_schema: BaseModel = get_schema
         self.object = None
-        self.autocommit = True
         self.success = None
-        self.logger = logger
         self._session = db_model.query.session
         self._errors = []
         
-    def create_object(self, data: dict, exclude_for_db: list | None = None):
+    def create_object(self, data: dict, exclude_for_db: list | None = None, commit=False):
         try:
             schema = self.create_schema(**data)
         except ValidationError as error:
@@ -62,19 +63,16 @@ class ObjectManager:
         new_object = self.db_model(**schema.model_dump(exclude=exclude_for_db))
         self._session.add(new_object)
 
-        if self.autocommit:
-            try:
-                safe_commit(self._session, self.logger)
-            except Exception as error:
-                self._errors.append(error)
-                self.success = False
+        if commit:
+            self.commit_changes()
+            if self._errors:
                 return None
 
         self.object = new_object
         self.success = True
         return new_object
     
-    def update_object(self, obj, data: dict):
+    def update_object(self, obj, data: dict, commit=True):
         self.object = obj
         try:
             schema = self.update_schema(**data)
@@ -88,12 +86,9 @@ class ObjectManager:
         for key, value in new_data.items():
             setattr(obj, key, value)
 
-        if self.autocommit:
-            try:
-                safe_commit(self._session, self.logger)
-            except Exception as error:
-                self._errors.append(error)
-                self.success = False
+        if commit:
+            self.commit_changes()
+            if self._errors:
                 return None
 
         self.object = obj
@@ -106,3 +101,11 @@ class ObjectManager:
             return jsonify(response), 200
         else:
             return create_error_response(*self._errors)
+
+    def commit_changes(self):
+        try:
+            safe_commit(self._session)
+        except Exception as error:
+            self._errors.append(error)
+            self.success = False
+            return None

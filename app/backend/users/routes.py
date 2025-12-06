@@ -39,8 +39,7 @@ def register_user():
     manager = ObjectManager(
         db_model=User,
         create_schema=UserCreate,
-        get_schema=UserSchema,
-        logger=logger
+        get_schema=UserSchema
     )
     manager.create_object(request.get_json(),
         exclude_for_db=['password_confirm'])
@@ -79,7 +78,7 @@ def edit_user(id: int):
     for key, value in new_data.items():
         setattr(user, key, value)
 
-    errors = safe_commit(db.session, logger)
+    errors = safe_commit(db.session)
     if errors:
         return errors
     response = UserDetailedSchema.model_validate(user).model_dump()
@@ -102,7 +101,7 @@ def delete_user(id: int):
         abort(403)
 
     user.is_active = False
-    errors = safe_commit(db.session, logger)
+    errors = safe_commit(db.session)
     if errors:
         return errors
 

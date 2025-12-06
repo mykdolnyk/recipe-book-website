@@ -30,8 +30,7 @@ def create_recipe():
     recipe_manager = ObjectManager(
         db_model=Recipe,
         create_schema=RecipeCreate,
-        get_schema=RecipeSchema,
-        logger=logger
+        get_schema=RecipeSchema
     )
     recipe_manager.create_object(
         data=request.get_json()
@@ -87,7 +86,6 @@ def edit_recipe(id: int):
         db_model=Recipe,
         update_schema=RecipeUpdate,
         get_schema=RecipeSchema,
-        logger=logger
     )
     recipe_manager.update_object(
         obj=recipe,
@@ -109,7 +107,7 @@ def delete_recipe(id: int):
         abort(403)
 
     recipe.is_visible = False
-    errors = safe_commit(db.session, logger)
+    errors = safe_commit(db.session)
     if errors:
         return errors
 
@@ -118,9 +116,12 @@ def delete_recipe(id: int):
 
 @recipes_bp.route('/recipes/<int:id>/publish', methods=['POST'])
 def publish_recipe(id: int):
-    recipe = Recipe.visible().filter_by(id=id).first()
+    recipe = Recipe.ua_query().filter_by(id=id).first()
     if not recipe:
         abort(404)
+
+    if recipe.is_published:
+        abort(400)
 
     application = RecipeApp.query.filter(
         RecipeApp.recipe == recipe,
@@ -130,14 +131,19 @@ def publish_recipe(id: int):
     if application:
         return create_error_response(ErrorCode.ALREADY_EXISTS, status_code=409)
 
-    response = create_object_from_dict(
-        data=request.get_json(),
+    object_manager = ObjectManager(
         db_model=RecipeApp,
         create_schema=RecipeAppCreate,
-        get_schema=RecipeAppSchema,
-        db=db,
-        logger=logger,
+        get_schema=RecipeAppSchema
     )
+    object_manager.create_object(
+        data=request.get_json(),
+        commit=False
+    )
+    object_manager.object.recipe_id = id
+    object_manager.commit_changes()
+    
+    response = object_manager.generate_response()
 
     return response
 
@@ -211,8 +217,7 @@ def change_recipe_status(id: int):
         data=request.get_json(),
         update_schema=RecipeUpdateStatus,
         get_schema=RecipeDetailedSchema,
-        db=db,
-        logger=logger,
+        db=db
     )
     return response
 
@@ -245,8 +250,7 @@ def create_recipe_tag():
     tag_manager = ObjectManager(
         db_model=RecipeTag,
         create_schema=RecipeTagCreate,
-        get_schema=RecipeTagSchema,
-        logger=logger
+        get_schema=RecipeTagSchema
     )
     tag_manager.create_object(request.get_json())
 
@@ -269,7 +273,7 @@ def update_recipe_tag(id: int):
     for key, value in new_data.items():
         setattr(tag, key, value)
 
-    errors = safe_commit(db.session, logger)
+    errors = safe_commit(db.session)
     if errors:
         return errors
 
@@ -286,7 +290,7 @@ def delete_recipe_tag(id: int):
         abort(404)
 
     db.session.delete(tag)
-    errors = safe_commit(db.session, logger)
+    errors = safe_commit(db.session)
     if errors:
         return errors
 

@@ -55,6 +55,11 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False
         },
+        'backend.utils.misc': {
+            'handlers': {'stdout', 'error_log'},
+            'level': 'INFO',
+            'propagate': False
+        },
     },
 
     'root': {
