@@ -25,59 +25,84 @@ def generate_unique_slug(text: str, model_class) -> str:
     return slug
 
 
-def safe_commit(db, logger):
+def safe_commit(session, logger):
     """Commits DB changes in a save way, loggin any exceptions into the `logger`.
-    Returns an error repsonse if there was an exception, or `None` if not."""
+    Reraises an exception if there was one, or returns `None` if not."""
     try:
-        db.session.commit()
+        session.commit()
         return None
-    except Exception as e:
-        db.session.rollback()
-        logger.exception(e)
-        return create_error_response(ErrorCode.UNKNOWN)
+    except Exception as exc:
+        session.rollback()
+        logger.exception(exc)
+        raise exc
 
 
-def create_object_from_dict(data: dict, db_model, create_schema,
-                            get_schema, db, logger,
-                            exclude_for_db: list | None = None) -> Tuple[Response, int]:
+class ObjectManager:
+    def __init__(self, db_model, logger, create_schema=None, update_schema=None, get_schema=None):
+        self.db_model = db_model
+        self.create_schema = create_schema
+        self.update_schema = update_schema
+        self.get_schema = get_schema
+        self.object = None
+        self.autocommit = True
+        self.success = None
+        self.logger = logger
+        self._session = db_model.query.session
+        self._errors = []
+        
+    def create_object(self, data: dict, exclude_for_db: list | None = None):
+        try:
+            schema = self.create_schema(**data)
+        except ValidationError as error:
+            self._errors.append(error)
+            self.success = False
+            return None
 
-    # Get and validate schema
-    try:
-        schema = create_schema(**data)
-    except ValidationError as error:
-        return jsonify({"errors": error.errors(include_url=False, include_context=False)}), 400
+        # Create DB object
+        new_object = self.db_model(**schema.model_dump(exclude=exclude_for_db))
+        self._session.add(new_object)
 
-    # Create DB object
-    new_object = db_model(**schema.model_dump(exclude=exclude_for_db))
-    db.session.add(new_object)
-    error_response = safe_commit(db, logger)
-    # If errors occur during the commit - return error response
-    if error_response:
-        return error_response
+        if self.autocommit:
+            try:
+                safe_commit(self._session, self.logger)
+            except Exception as error:
+                self._errors.append(error)
+                self.success = False
+                return None
 
-    # Get a response
-    response = get_schema.model_validate(new_object).model_dump()
-    return jsonify(response), 200
-
-
-def update_object_from_dict(obj, data: dict, update_schema,
-                            get_schema, db, logger) -> Tuple[Response, int]:
-    # Get and validate schema
-    try:
-        schema = update_schema(**data)
-    except ValidationError as error:
-        return jsonify({"errors": error.errors(include_url=False, include_context=False)}), 400
-
-    # Update DB object
-    new_data = schema.model_dump(exclude_unset=True)
-    for key, value in new_data.items():
-        setattr(obj, key, value)
+        self.object = new_object
+        self.success = True
+        return new_object
     
-    error_response = safe_commit(db, logger)
-    # If errors occur during the commit - return error response
-    if error_response:
-        return error_response
+    def update_object(self, obj, data: dict):
+        self.object = obj
+        try:
+            schema = self.update_schema(**data)
+        except ValidationError as error:
+            self._errors.append(error)
+            self.success = False
+            return None
 
-    # Get a response
-    response = get_schema.model_validate(obj).model_dump()
-    return jsonify(response), 200
+        # Update DB object
+        new_data = schema.model_dump(exclude_unset=True)
+        for key, value in new_data.items():
+            setattr(obj, key, value)
+
+        if self.autocommit:
+            try:
+                safe_commit(self._session, self.logger)
+            except Exception as error:
+                self._errors.append(error)
+                self.success = False
+                return None
+
+        self.object = obj
+        self.success = True
+        return obj
+    
+    def generate_response(self):
+        if not self._errors:
+            response = self.get_schema.model_validate(self.object).model_dump()
+            return jsonify(response), 200
+        else:
+            return create_error_response(*self._errors)

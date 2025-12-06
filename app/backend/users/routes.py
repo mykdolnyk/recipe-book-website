@@ -3,7 +3,7 @@ from logging import getLogger
 from flask.blueprints import Blueprint
 from pydantic import ValidationError
 from backend.utils.pagination import paginate
-from backend.utils.misc import create_object_from_dict, safe_commit
+from backend.utils.misc import ObjectManager, safe_commit
 from backend.utils.login import is_owner_or_superuser
 from backend.users.schemas import UserCreate, UserDetailedSchema, UserEdit, UserLogin, UserSchema
 from backend.users.models import User
@@ -36,15 +36,16 @@ def get_user_list():
 
 @user_bp.route('/users', methods=["POST"])
 def register_user():
-    response = create_object_from_dict(
-        data=request.get_json(),
+    manager = ObjectManager(
         db_model=User,
-        exclude_for_db=['password_confirm'],
         create_schema=UserCreate,
         get_schema=UserSchema,
-        db=db,
         logger=logger
     )
+    manager.create_object(request.get_json(),
+        exclude_for_db=['password_confirm'])
+    
+    response = manager.generate_response()
     return response
 
 
@@ -78,7 +79,7 @@ def edit_user(id: int):
     for key, value in new_data.items():
         setattr(user, key, value)
 
-    errors = safe_commit(db, logger)
+    errors = safe_commit(db.session, logger)
     if errors:
         return errors
     response = UserDetailedSchema.model_validate(user).model_dump()
@@ -101,7 +102,7 @@ def delete_user(id: int):
         abort(403)
 
     user.is_active = False
-    errors = safe_commit(db, logger)
+    errors = safe_commit(db.session, logger)
     if errors:
         return errors
 

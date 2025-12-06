@@ -3,7 +3,7 @@ from flask.blueprints import Blueprint
 from flask import abort, jsonify, request
 from flask_login import current_user, login_required
 from pydantic import ValidationError
-from backend.utils.misc import create_object_from_dict, safe_commit, update_object_from_dict
+from backend.utils.misc import ObjectManager, safe_commit
 from backend.utils.errors import ErrorCode, create_error_response
 from backend.utils.login import is_owner_or_superuser, superuser_only
 from backend.utils.pagination import paginate
@@ -27,14 +27,17 @@ recipes_bp = Blueprint(
 @recipes_bp.route('/recipes', methods=['POST'])
 @login_required
 def create_recipe():
-    response = create_object_from_dict(
-        data=request.get_json(),
+    recipe_manager = ObjectManager(
         db_model=Recipe,
         create_schema=RecipeCreate,
         get_schema=RecipeSchema,
-        db=db,
         logger=logger
     )
+    recipe_manager.create_object(
+        data=request.get_json()
+    )
+
+    response = recipe_manager.generate_response()
     return response
 
 
@@ -73,30 +76,27 @@ def get_recipe_detailed(id: int):
 
 @recipes_bp.route('/recipes/<int:id>', methods=['PUT'])
 def edit_recipe(id: int):
-    try:
-        recipe_schema = RecipeUpdate(**request.get_json())
-    except ValidationError as error:
-        return jsonify({"errors": error.errors(include_url=False, include_context=False)}), 400
-
-    recipe = Recipe.visible().filter_by(id=id).first()
+    recipe = Recipe.ua_query().filter_by(id=id).first()
     if not recipe:
         abort(404)
-
     if not is_owner_or_superuser(recipe.author):
-        abort(403)
+        abort(403)        
 
-    new_data = recipe_schema.model_dump(exclude_unset=True)
-    # Update the values of the DB model
-    for key, value in new_data.items():
-        setattr(recipe, key, value)
+    
+    recipe_manager = ObjectManager(
+        db_model=Recipe,
+        update_schema=RecipeUpdate,
+        get_schema=RecipeSchema,
+        logger=logger
+    )
+    recipe_manager.update_object(
+        obj=recipe,
+        data=request.get_json()
+    )
 
-    errors = safe_commit(db, logger)
-    if errors:
-        return errors
+    response = recipe_manager.generate_response()
+    return response
 
-    response = RecipeSchema.model_validate(recipe).model_dump()
-
-    return jsonify(response)
 
 
 @recipes_bp.route('/recipes/<int:id>', methods=['DELETE'])
@@ -109,7 +109,7 @@ def delete_recipe(id: int):
         abort(403)
 
     recipe.is_visible = False
-    errors = safe_commit(db, logger)
+    errors = safe_commit(db.session, logger)
     if errors:
         return errors
 
@@ -121,7 +121,7 @@ def publish_recipe(id: int):
     recipe = Recipe.visible().filter_by(id=id).first()
     if not recipe:
         abort(404)
-    
+
     application = RecipeApp.query.filter(
         RecipeApp.recipe == recipe,
         RecipeApp.status == RecipeApp.STATUSES.NOT_REVIEWED,
@@ -138,7 +138,7 @@ def publish_recipe(id: int):
         db=db,
         logger=logger,
     )
-    
+
     return response
 
 
@@ -149,9 +149,9 @@ def get_recipe_application_list():
     else:
         # only the current user's applications
         query = RecipeApp.query.filter(
-            RecipeApp.recipe.has(author_id=current_user.id) 
+            RecipeApp.recipe.has(author_id=current_user.id)
         )
-    
+
     pagination = paginate(
         request_args=request.args,
         sqlalchemy_query=query,
@@ -169,9 +169,9 @@ def get_recipe_application(id: int):
     else:
         # only the current user's applications
         query = RecipeApp.query.filter(
-            RecipeApp.recipe.has(author_id=current_user.id) 
-    )
-    
+            RecipeApp.recipe.has(author_id=current_user.id)
+        )
+
     application = query.filter_by(id=id).first()
     if not application:
         abort(404)
@@ -186,7 +186,7 @@ def update_recipe_application(id: int):
     application = RecipeApp.query.filter_by(id=id).first()
     if not application:
         abort(404)
-        
+
     response = update_object_from_dict(
         obj=application,
         data=request.get_json(),
@@ -195,7 +195,7 @@ def update_recipe_application(id: int):
         db=db,
         logger=logger,
     )
-    
+
     return response
 
 
@@ -205,7 +205,7 @@ def change_recipe_status(id: int):
     recipe = Recipe.query.filter_by(id=id).first()
     if not recipe:
         abort(404)
-        
+
     response = update_object_from_dict(
         obj=recipe,
         data=request.get_json(),
@@ -242,14 +242,16 @@ def get_recipe_tag(id: int):
 @recipes_bp.route('/recipe-tags', methods=['POST'])
 @superuser_only
 def create_recipe_tag():
-    response = create_object_from_dict(
-        data=request.get_json(),
+    tag_manager = ObjectManager(
         db_model=RecipeTag,
         create_schema=RecipeTagCreate,
         get_schema=RecipeTagSchema,
-        db=db,
         logger=logger
     )
+    tag_manager.create_object(request.get_json())
+
+    response = tag_manager.generate_response()
+
     return response
 
 
@@ -267,7 +269,7 @@ def update_recipe_tag(id: int):
     for key, value in new_data.items():
         setattr(tag, key, value)
 
-    errors = safe_commit(db, logger)
+    errors = safe_commit(db.session, logger)
     if errors:
         return errors
 
@@ -284,7 +286,7 @@ def delete_recipe_tag(id: int):
         abort(404)
 
     db.session.delete(tag)
-    errors = safe_commit(db, logger)
+    errors = safe_commit(db.session, logger)
     if errors:
         return errors
 
@@ -312,5 +314,3 @@ def get_meal_type(id: int):
 
     response = MealTypeSchema.model_validate(mtype).model_dump()
     return jsonify(response)
-
-
