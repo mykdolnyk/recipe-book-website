@@ -168,7 +168,20 @@ def test_recipe_tags(app):
 
 
 @pytest.fixture
-def testing_setup(client: FlaskClient, monkeypatch) -> dict:
+def fake_pw_hashing(monkeypatch):
+    
+    def fake_hash(password, salt):
+        return f"fake-hash-{password.decode()}".encode()
+
+    def fake_check(password, hashed_password):
+        return hashed_password == fake_hash(password, None)
+
+    monkeypatch.setattr("bcrypt.hashpw", fake_hash)
+    monkeypatch.setattr("bcrypt.checkpw", fake_check)
+
+
+@pytest.fixture
+def testing_setup(client: FlaskClient, fake_pw_hashing) -> dict:
     objects = {
         'users': {
             "active": [],
@@ -183,17 +196,6 @@ def testing_setup(client: FlaskClient, monkeypatch) -> dict:
         'recipe_tags': [],
         'recipe_pub_apps': [],
     }
-    
-    # ----- Change hashing for testing purposes -----
-    
-    def fake_hash(password, salt):
-        return f"fake-hash-{password.decode()}".encode()
-
-    def fake_check(password, hashed_password):
-        return hashed_password == fake_hash(password, None)
-
-    monkeypatch.setattr("bcrypt.hashpw", fake_hash)
-    monkeypatch.setattr("bcrypt.checkpw", fake_check)
 
     # ----- Create Users -----
 
