@@ -11,6 +11,8 @@ def superuser_only(func):
     @wraps(func)
     @login_required
     def decorated_view(*args, **kwargs):
+        if current_user.is_anonymous:
+            abort(401)
         if not current_user.is_superuser:
             abort(403)
         return func(*args, **kwargs)

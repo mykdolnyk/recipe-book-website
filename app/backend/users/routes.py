@@ -5,7 +5,7 @@ from pydantic import ValidationError
 from backend.utils.pagination import paginate
 from backend.utils.misc import ObjectManager, safe_commit
 from backend.utils.login import is_owner_or_superuser
-from backend.users.schemas import UserCreate, UserDetailedSchema, UserEdit, UserLogin, UserSchema
+from backend.users.schemas import UserCreate, UserDetailedSchema, UserUpdate, UserLogin, UserSchema
 from backend.users.models import User
 from backend.utils.errors import create_error_response, ErrorCode
 from flask import abort, jsonify, request
@@ -61,29 +61,25 @@ def get_user_info(id: int):
 
 @user_bp.route('/users/<int:id>', methods=["PUT"])
 def edit_user(id: int):
-    try:
-        user_schema = UserEdit(**request.get_json())
-    except ValidationError as error:
-        return jsonify({"errors": error.errors(include_url=False, include_context=False)}), 400
-
     user: User = User.active().filter_by(id=id).first()
     if not user:
-        return create_error_response(ErrorCode.USER_NOT_FOUND)
-    
+        return create_error_response(ErrorCode.USER_NOT_FOUND, status_code=404)
+
     if not is_owner_or_superuser(user):
         abort(403)
 
-    new_data = user_schema.model_dump(exclude_unset=True)
-    # Update the values
-    for key, value in new_data.items():
-        setattr(user, key, value)
+    manager = ObjectManager(
+        db_model=User,
+        update_schema=UserUpdate,
+        get_schema=UserDetailedSchema,
+    )
+    manager.update_object(
+        obj=user,
+        data=request.get_json()
+    )
 
-    errors = safe_commit(db.session)
-    if errors:
-        return errors
-    response = UserDetailedSchema.model_validate(user).model_dump()
-
-    return jsonify(response)
+    response = manager.generate_response()
+    return response
 
 
 @user_bp.route('/users/<int:id>', methods=['DELETE'])

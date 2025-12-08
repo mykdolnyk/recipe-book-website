@@ -118,8 +118,7 @@ class RecipeDetailedSchema(RecipeSchema):
 
 
 class RecipePublicationApplicationCreate(BaseModel):
-    recipe_id: int
-    comment: str
+    comment: str | None = None
     
     
 class RecipePublicationApplicationSchema(BaseModel):

@@ -48,7 +48,7 @@ class UserCreate(BaseModel):
     _validate_email = field_validator('email')(check_email_availability)
 
 
-class UserEdit(BaseModel):
+class UserUpdate(BaseModel):
     name: str | None = Field(default=None, max_length=64)
     bio: str | None = Field(default=None, max_length=512)
     email: EmailStr | None = None

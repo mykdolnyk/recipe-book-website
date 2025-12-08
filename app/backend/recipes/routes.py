@@ -27,16 +27,16 @@ recipes_bp = Blueprint(
 @recipes_bp.route('/recipes', methods=['POST'])
 @login_required
 def create_recipe():
-    recipe_manager = ObjectManager(
+    manager = ObjectManager(
         db_model=Recipe,
         create_schema=RecipeCreate,
         get_schema=RecipeSchema
     )
-    recipe_manager.create_object(
+    manager.create_object(
         data=request.get_json()
     )
 
-    response = recipe_manager.generate_response()
+    response = manager.generate_response()
     return response
 
 
@@ -80,19 +80,18 @@ def edit_recipe(id: int):
         abort(404)
     if not is_owner_or_superuser(recipe.author):
         abort(403)        
-
     
-    recipe_manager = ObjectManager(
+    manager = ObjectManager(
         db_model=Recipe,
         update_schema=RecipeUpdate,
         get_schema=RecipeSchema,
     )
-    recipe_manager.update_object(
+    manager.update_object(
         obj=recipe,
         data=request.get_json()
     )
 
-    response = recipe_manager.generate_response()
+    response = manager.generate_response()
     return response
 
 
@@ -131,19 +130,19 @@ def publish_recipe(id: int):
     if application:
         return create_error_response(ErrorCode.ALREADY_EXISTS, status_code=409)
 
-    object_manager = ObjectManager(
+    manager = ObjectManager(
         db_model=RecipeApp,
         create_schema=RecipeAppCreate,
         get_schema=RecipeAppSchema
     )
-    object_manager.create_object(
+    manager.create_object(
         data=request.get_json(),
         commit=False
     )
-    object_manager.object.recipe_id = id
-    object_manager.commit_changes()
+    manager.object.recipe_id = id
+    manager.commit_changes()
     
-    response = object_manager.generate_response()
+    response = manager.generate_response()
 
     return response
 
@@ -152,6 +151,8 @@ def publish_recipe(id: int):
 def get_recipe_application_list():
     if current_user.is_superuser:
         query = RecipeApp.query
+    elif current_user.is_anonymous:
+        abort(401)
     else:
         # only the current user's applications
         query = RecipeApp.query.filter(
@@ -192,16 +193,33 @@ def update_recipe_application(id: int):
     application = RecipeApp.query.filter_by(id=id).first()
     if not application:
         abort(404)
-
-    response = update_object_from_dict(
-        obj=application,
-        data=request.get_json(),
+        
+    application_manager = ObjectManager(
+        db_model=RecipeApp,
         update_schema=RecipeAppUpdate,
         get_schema=RecipeAppSchema,
-        db=db,
-        logger=logger,
     )
+    application_manager.update_object(
+        obj=application,
+        data=request.get_json()
+    )
+    # Update the `last_reviewed_by` field
+    application_manager.object.last_reviewed_by_id = current_user.id
+    application_manager.commit_changes()
+    
+    if application_manager.object.status == RecipeApp.STATUSES.ACCEPTED:
+        # Update the recipe's `is_published` to True
+        recipe_manager = ObjectManager(
+            db_model=Recipe,
+            update_schema=RecipeUpdateStatus,
+            get_schema=RecipeDetailedSchema,
+        )
+        recipe_manager.update_object(
+            obj=application.recipe,
+            data={"is_published": True}
+        )
 
+    response = application_manager.generate_response()
     return response
 
 
@@ -212,13 +230,17 @@ def change_recipe_status(id: int):
     if not recipe:
         abort(404)
 
-    response = update_object_from_dict(
-        obj=recipe,
-        data=request.get_json(),
+    manager = ObjectManager(
+        db_model=Recipe,
         update_schema=RecipeUpdateStatus,
         get_schema=RecipeDetailedSchema,
-        db=db
     )
+    manager.update_object(
+        obj=recipe,
+        data=request.get_json()
+    )
+
+    response = manager.generate_response()
     return response
 
 
@@ -247,14 +269,14 @@ def get_recipe_tag(id: int):
 @recipes_bp.route('/recipe-tags', methods=['POST'])
 @superuser_only
 def create_recipe_tag():
-    tag_manager = ObjectManager(
+    manager = ObjectManager(
         db_model=RecipeTag,
         create_schema=RecipeTagCreate,
         get_schema=RecipeTagSchema
     )
-    tag_manager.create_object(request.get_json())
+    manager.create_object(request.get_json())
 
-    response = tag_manager.generate_response()
+    response = manager.generate_response()
 
     return response
 
@@ -262,24 +284,22 @@ def create_recipe_tag():
 @recipes_bp.route('/recipe-tags/<int:id>', methods=['PUT'])
 @superuser_only
 def update_recipe_tag(id: int):
-    try:
-        schema = RecipeTagUpdate(**request.get_json())
-    except ValidationError as error:
-        return jsonify({"errors": error.errors(include_url=False, include_context=False)}), 400
+    tag = RecipeTag.query.filter_by(id=id).first()
+    if not tag:
+        abort(404)
 
-    tag = RecipeTag.query.filter_by(id=id).first_or_404()
-
-    new_data = schema.model_dump(exclude_unset=True)
-    for key, value in new_data.items():
-        setattr(tag, key, value)
-
-    errors = safe_commit(db.session)
-    if errors:
-        return errors
-
-    response = RecipeTagSchema.model_validate(tag).model_dump()
-
-    return jsonify(response)
+    manager = ObjectManager(
+        db_model=RecipeTag,
+        update_schema=RecipeTagUpdate,
+        get_schema=RecipeTagSchema,
+    )
+    manager.update_object(
+        obj=tag,
+        data=request.get_json()
+    )
+    
+    response = manager.generate_response()
+    return response
 
 
 @recipes_bp.route('/recipe-tags/<int:id>', methods=['DELETE'])
