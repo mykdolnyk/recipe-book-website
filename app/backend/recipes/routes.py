@@ -2,7 +2,6 @@ from logging import getLogger
 from flask.blueprints import Blueprint
 from flask import abort, jsonify, request
 from flask_login import current_user, login_required
-from pydantic import ValidationError
 from backend.utils.misc import ObjectManager, safe_commit
 from backend.utils.errors import ErrorCode, create_error_response
 from backend.utils.login import is_owner_or_superuser, superuser_only
@@ -78,8 +77,11 @@ def edit_recipe(id: int):
     recipe = Recipe.ua_query().filter_by(id=id).first()
     if not recipe:
         abort(404)
+    if current_user.is_anonymous:
+        abort(401)
     if not is_owner_or_superuser(recipe.author):
-        abort(403)        
+        abort(403)
+    
     
     manager = ObjectManager(
         db_model=Recipe,
@@ -101,7 +103,8 @@ def delete_recipe(id: int):
     recipe = Recipe.ua_query().filter_by(id=id).first()
     if not recipe:
         abort(404)
-
+    if current_user.is_anonymous:
+        abort(401)
     if not is_owner_or_superuser(recipe.author):
         abort(403)
 

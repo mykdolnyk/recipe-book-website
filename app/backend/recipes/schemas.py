@@ -108,6 +108,7 @@ class RecipeSchema(BaseModel):
     author: UserSchema | None
     tags: list[RecipeTagSchema]
     slug: str
+    is_published: bool
     
     model_config = ConfigDict(from_attributes=True)
     

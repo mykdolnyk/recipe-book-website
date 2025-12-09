@@ -1,4 +1,4 @@
-import flask_login
+from flask_login import current_user, login_user, logout_user
 from logging import getLogger
 from flask.blueprints import Blueprint
 from pydantic import ValidationError
@@ -24,9 +24,14 @@ user_bp = Blueprint(
 
 @user_bp.route('/users', methods=['GET'])
 def get_user_list():
+    if current_user.is_superuser:
+        query = User.query
+    else:
+        query = User.active()
+    
     pagination = paginate(
         request_args=request.args,
-        sqlalchemy_query=User.active(),
+        sqlalchemy_query=query,
         pydantic_model=UserSchema,
         list_name='user_list',
     )
@@ -106,7 +111,7 @@ def delete_user(id: int):
 
 @user_bp.route('/auth/login', methods=['POST'])
 def login():
-    if flask_login.current_user.is_authenticated:
+    if current_user.is_authenticated:
         return create_error_response('Already logged in.', status_code=400)
     
     try:
@@ -116,7 +121,7 @@ def login():
 
     user: User = login_schema.user
     
-    flask_login.login_user(user)
+    login_user(user)
 
     response = {
         'id': user.id
@@ -127,9 +132,9 @@ def login():
 
 @user_bp.route('/auth/logout', methods=['POST'])
 def logout():
-    if not flask_login.current_user.is_authenticated:
+    if not current_user.is_authenticated:
         return create_error_response('Already logged out.', status_code=200)
     
-    flask_login.logout_user()
+    logout_user()
 
     return '', 200

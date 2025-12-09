@@ -51,7 +51,7 @@ class ObjectManager:
         self._session = db_model.query.session
         self._errors = []
         
-    def create_object(self, data: dict, exclude_for_db: list | None = None, commit=False):
+    def create_object(self, data: dict, exclude_for_db: list | None = None, commit=True):
         try:
             schema = self.create_schema(**data)
         except ValidationError as error:
