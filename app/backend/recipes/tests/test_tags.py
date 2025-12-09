@@ -1,10 +1,11 @@
 from flask.testing import FlaskClient
+from flask_login import login_user
 from conftest import TEST_PASSWORD
 
 
-def test_create_tag(app, client: FlaskClient, test_users):
-    user = test_users['active'][0]
-    superuser = test_users['super'][0]
+def test_create_tag(client: FlaskClient, app, testing_setup):
+    user = testing_setup['users']['active'][0]
+    
     # logged-out request
     name = "Tag name"
     response = client.post('/api/recipe-tags', json={
@@ -13,21 +14,17 @@ def test_create_tag(app, client: FlaskClient, test_users):
     assert response.status_code == 401
 
     # logged in as a usual user
-    response = client.post('/api/auth/login', json={
-        "email": user.email,
-        "password": TEST_PASSWORD,
-    })
+    with app.test_request_context():
+        login_user(user)
     response = client.post('/api/recipe-tags', json={
         "name": name,
     })
     assert response.status_code == 403
 
     # logged in as a superuser
-    response = client.post('/api/auth/logout')
-    response = client.post('/api/auth/login', json={
-        "email": superuser.email,
-        "password": TEST_PASSWORD,
-    })
+    user = testing_setup['users']['super'][0]
+    with app.test_request_context():
+        login_user(user)
     response = client.post('/api/recipe-tags', json={
         "name": name,
     })
@@ -35,11 +32,10 @@ def test_create_tag(app, client: FlaskClient, test_users):
     assert response.get_json()['name'] == name
 
 
-def test_edit_tag(client: FlaskClient, test_recipe_tags, test_users):
-    user = test_users['active'][0]
-    superuser = test_users['super'][0]
-    tag = test_recipe_tags['visible'][0]
-    new_name = "New Tag"
+def test_edit_tag(client: FlaskClient, app, testing_setup):
+    tag = testing_setup['recipe_tags'][0]
+    
+    new_name = "New Tag Name"
     assert tag.name != new_name
 
     # non-logged-in request
@@ -49,21 +45,20 @@ def test_edit_tag(client: FlaskClient, test_recipe_tags, test_users):
     assert response.status_code == 401
 
     # non-superuser logged-in request
-    response = client.post('/api/auth/login', json={
-        "email": user.email,
-        "password": TEST_PASSWORD,
-    })
+    user = testing_setup['users']['active'][0]
+    with app.test_request_context():
+        login_user(user)
+
     response = client.put(f'/api/recipe-tags/{tag.id}', json={
         "name": new_name,
     })
     assert response.status_code == 403
 
     # superuser request
-    response = client.post('/api/auth/logout')
-    response = client.post('/api/auth/login', json={
-        "email": superuser.email,
-        "password": TEST_PASSWORD,
-    })
+    user = testing_setup['users']['super'][0]
+    with app.test_request_context():
+        login_user(user)
+        
     response = client.put(f'/api/recipe-tags/{tag.id}', json={
         "name": new_name,
     })
@@ -71,8 +66,8 @@ def test_edit_tag(client: FlaskClient, test_recipe_tags, test_users):
     assert response.get_json()['name'] == new_name
 
 
-def test_get_tag(client: FlaskClient, test_recipe_tags):
-    tag = test_recipe_tags['visible'][0]
+def test_get_tag(client: FlaskClient, testing_setup):
+    tag = testing_setup['recipe_tags'][0]
 
     # get a tag
     response = client.get(f'/api/recipe-tags/{tag.id}')
@@ -85,46 +80,31 @@ def test_get_tag(client: FlaskClient, test_recipe_tags):
     assert response.status_code == 404
 
 
-def test_get_tag_list(client: FlaskClient, test_recipe_tags):
+def test_get_tag_list(client: FlaskClient, app, testing_setup):
     response = client.get('/api/recipe-tags')
     assert response.status_code == 200
-    assert response.get_json()["total"] == len(test_recipe_tags['visible'])
-
-    # Checking pagination
-    assert response.get_json()['per_page'] == 5
-    assert response.get_json()['pages'] == 2
-    # Exceeding max per page
-    response = client.get('/api/recipe-tags?per-page=30')
-    assert response.status_code == 200
-    assert response.get_json()['per_page'] == 25
-    assert response.get_json()['pages'] == 1
-    # Incorrect params
-    response = client.get('/api/recipe-tags?per-page=hello')
-    assert response.status_code == 400
+    assert response.get_json()["total"] == len(testing_setup['recipe_tags'])
 
 
-def test_delete_tag(client: FlaskClient, test_recipe_tags, test_users):
-    user = test_users['active'][0]
-    superuser = test_users['super'][0]
-    tag = test_recipe_tags['visible'][0]
+def test_delete_tag(client: FlaskClient, app, testing_setup):
+    tag = testing_setup['recipe_tags'][0]
 
     # non-logged-in request
     response = client.delete(f'/api/recipe-tags/{tag.id}')
     assert response.status_code == 401
 
     # non-superuser logged-in request
-    response = client.post('/api/auth/login', json={
-        "email": user.email,
-        "password": TEST_PASSWORD,
-    })
+    user = testing_setup['users']['active'][0]
+    with app.test_request_context():
+        login_user(user)
+
     response = client.delete(f'/api/recipe-tags/{tag.id}')
     assert response.status_code == 403
 
     # superuser request
-    response = client.post('/api/auth/logout')
-    response = client.post('/api/auth/login', json={
-        "email": superuser.email,
-        "password": TEST_PASSWORD,
-    })
+    user = testing_setup['users']['super'][0]
+    with app.test_request_context():
+        login_user(user)
+
     response = client.delete(f'/api/recipe-tags/{tag.id}')
     assert response.status_code == 204

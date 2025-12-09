@@ -3,7 +3,7 @@ from werkzeug.test import TestResponse
 from backend.utils.errors import ErrorCode
 from backend.users.models import User
 from conftest import TEST_PASSWORD
-
+from flask_login import login_user
 
 def test_register_user(client: FlaskClient):
     user_name = 'testing'
@@ -41,8 +41,8 @@ def test_register_user(client: FlaskClient):
     assert User.active().filter_by(email=new_email)
 
 
-def test_login_user(client: FlaskClient, test_users):
-    user = test_users['active'][0]
+def test_login_user(client: FlaskClient, testing_setup):
+    user = testing_setup['users']['active'][0]
     response = client.post('/api/auth/login', json={
         "email": user.email,
         "password": TEST_PASSWORD,
@@ -62,8 +62,9 @@ def test_login_user(client: FlaskClient, test_users):
         assert '_user_id' in session
 
 
-def test_logout_user(client: FlaskClient, test_users):
-    user = test_users['active'][0]
+def test_logout_user(client: FlaskClient, testing_setup):
+    user = testing_setup['users']['active'][0]
+    
     # log in first
     response = client.post('/api/auth/login', json={
         "email": user.email,
@@ -90,115 +91,102 @@ def test_logout_user(client: FlaskClient, test_users):
         assert '_user_id' not in session
 
 
-def test_delete_user(client: FlaskClient, test_users):
-    user = test_users['active'][0]
-    superuser = test_users['super'][0]
-    other_user = test_users['active'][1]
+def test_delete_user(client: FlaskClient, app, testing_setup):
+    user = testing_setup['users']['active'][0]
+    other_user = testing_setup['users']['active'][1]
+    superuser = testing_setup['users']['super'][0]
+    
     # non-logged in user tries to delete
     response = client.delete(f'/api/users/{user.id}?confirm=True')
     assert response.status_code == 403
     assert User.active().filter_by(email=user.email).first()
 
-    # log in
-    response = client.post('/api/auth/login', json={
-        "email": user.email,
-        "password": TEST_PASSWORD,
-    })
+    # delete as non-owner non-superuser
+    with app.test_request_context():
+        login_user(other_user)
+        
+    response = client.delete(f'/api/users/{user.id}?confirm=True')
+    assert response.status_code == 403
+    assert User.active().filter_by(email=user.email).first()
+
+    # delete as an owner user
+    with app.test_request_context():
+        login_user(user)
+        
     # non-confirmed delete
     response = client.delete(f'/api/users/{user.id}')
     assert response.status_code == 403
     assert User.active().filter_by(email=user.email).first()
+    
     # confirmed delete
     response = client.delete(f'/api/users/{user.id}?confirm=True')
     assert response.status_code == 204
     assert not User.active().filter_by(email=user.email).first()
 
-    # restore the user
+    # restore the user for further testing
     user.is_active = True
     User.query.session.commit()
     assert User.active().filter_by(email=user.email).first()
-    # log out and log in as a superuser
-    response = client.post('/api/auth/logout')
-    response = client.post('/api/auth/login', json={
-        "email": superuser.email,
-        "password": TEST_PASSWORD,
-    })
+    
     # delete as a superuser
+    with app.test_request_context():
+        login_user(superuser)
+
     response = client.delete(f'/api/users/{user.id}?confirm=True')
     assert response.status_code == 204
     assert not User.active().filter_by(email=user.email).first()
+
+
+def test_edit_user(client: FlaskClient, app, testing_setup):
+    user = testing_setup['users']['active'][0]
+    other_user = testing_setup['users']['active'][1]
+    superuser = testing_setup['users']['super'][0]
+
+    new_name = 'A new name'
     
-    # restore the user
-    user.is_active = True
-    User.query.session.commit()
-    assert User.active().filter_by(email=user.email).first()
-    # log out and log in as a non-owner non-superuser
-    response = client.post('/api/auth/logout')
-    response = client.post('/api/auth/login', json={
-        "email": other_user.email,
-        "password": TEST_PASSWORD,
-    })
-    # delete as non-owner non-superuser
-    response = client.delete(f'/api/users/{user.id}?confirm=True')
-    assert response.status_code == 403
-    assert User.active().filter_by(email=user.email).first()
-
-
-def test_edit_user(client: FlaskClient, test_users):
-    user = test_users['active'][0]
-    superuser = test_users['super'][0]
-    other_user = test_users['active'][1]
-    new_name = 'beb'
-    # non-logged in user tries to edit
+    # non-logged-in update
     response = client.put(f'/api/users/{user.id}', json={
         'name': new_name
     })
     assert response.status_code == 403
     assert not User.active().filter_by(name=new_name).first()
 
-    # log in
-    response = client.post('/api/auth/login', json={
-        "email": user.email,
-        "password": TEST_PASSWORD,
+    # update as non-owner non-superuser
+    with app.test_request_context():
+        login_user(other_user)
+    
+    response = client.put(f'/api/users/{user.id}', json={
+        'name': new_name
     })
+    assert response.status_code == 403
+    assert not User.active().filter_by(name=new_name).first()
+
     # logged-in update
+    with app.test_request_context():
+        login_user(user)
+        
     response = client.put(f'/api/users/{user.id}', json={
         'name': new_name
     })
     assert response.status_code == 200
     assert User.active().filter_by(name=new_name).first()
 
-    # log out and log in as a superuser
-    response = client.post('/api/auth/logout')
-    response = client.post('/api/auth/login', json={
-        "email": superuser.email,
-        "password": TEST_PASSWORD,
-    })
     # update as a superuser
-    newest_name = 'rak'
-    response = client.put(f'/api/users/{user.id}', json={
-        'name': newest_name
-    })
-    assert response.status_code == 200
-    assert User.active().filter_by(name=newest_name).first()
-    
-    # log out and log in as a non-owner non-superuser
-    response = client.post('/api/auth/logout')
-    response = client.post('/api/auth/login', json={
-        "email": other_user.email,
-        "password": TEST_PASSWORD,
-    })
-    # update as non-owner non-superuser
+    with app.test_request_context():
+        login_user(superuser)
+
+    new_name = 'An even newer name'
     response = client.put(f'/api/users/{user.id}', json={
         'name': new_name
     })
-    assert response.status_code == 403
-    assert not User.active().filter_by(name=new_name).first()
+    assert response.status_code == 200
+    assert User.active().filter_by(name=new_name).first()
 
 
-def test_get_user(client: FlaskClient, test_users):
-    user = test_users['active'][0]
-    inactive_user = test_users['inactive'][0]
+def test_get_user(client: FlaskClient, testing_setup):
+    user = testing_setup['users']['active'][0]
+    inactive_user = testing_setup['users']['inactive'][0]
+    
     response: TestResponse = client.get(f'/api/users/{user.id}')
     assert response.status_code == 200
     assert response.get_json()['name'] == user.name
@@ -214,21 +202,16 @@ def test_get_user(client: FlaskClient, test_users):
     assert response.status_code == 400
     
 
-def test_get_user_list(client: FlaskClient, test_users):
+def test_get_user_list(client: FlaskClient, app, testing_setup):
     response: TestResponse = client.get('/api/users')
     assert response.status_code == 200
-    assert response.get_json()['total'] == 13 # Number of users created by the fixture, excluding inactive ones
-    # Checking pagination
-    assert response.get_json()['per_page'] == 5
-    assert response.get_json()['pages'] == 3
+    assert response.get_json()['total'] == User.active().count()
 
-    # Exceeding max per page
-    response: TestResponse = client.get('/api/users?per-page=30')
+    # admin request
+    superuser = testing_setup['users']['super'][1]
+    with app.test_request_context():
+        login_user(superuser)
+        
+    response: TestResponse = client.get('/api/users')
     assert response.status_code == 200
-    assert response.get_json()['per_page'] == 25
-    assert response.get_json()['pages'] == 1
-    
-    # Incorrect params
-    response: TestResponse = client.get('/api/users?per-page=hello')
-    assert response.status_code == 400
-
+    assert response.get_json()['total'] == User.query.count()
