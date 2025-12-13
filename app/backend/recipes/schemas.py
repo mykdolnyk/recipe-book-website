@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 import flask_login
-from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
 from backend.recipes.models import MealType, Recipe, RecipeTag
 from backend.utils.misc import generate_unique_slug, slugify
 from backend.users.schemas import UserSchema
@@ -78,6 +78,19 @@ class RecipeCreate(BaseModel):
     @property
     def author_id(self) -> int:
         return flask_login.current_user.id
+
+    @field_validator('tags')
+    def validate_tags(tags: list[int]):
+        for tag in tags:
+            if not RecipeTag.query.filter(RecipeTag.id == tag).first():
+                raise ValueError(f"Recipe Tag with such ID doesn't exist: {tag}.")
+        return tags
+
+    @field_validator('meal_type_id')
+    def validate_meal_type(meal_type_id: int):
+        if not MealType.query.filter(MealType.id == meal_type_id).first():
+            raise ValueError(f"Meal Type with such ID doesn't exist: {meal_type_id}.")
+        return meal_type_id
 
 
 class RecipeUpdate(BaseModel):

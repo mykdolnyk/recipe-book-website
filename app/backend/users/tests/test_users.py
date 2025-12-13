@@ -5,6 +5,7 @@ from backend.users.models import User
 from conftest import TEST_PASSWORD
 from flask_login import login_user
 
+
 def test_register_user(client: FlaskClient):
     user_name = 'testing'
     email = "test@example.com"

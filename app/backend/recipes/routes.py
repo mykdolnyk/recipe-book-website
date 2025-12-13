@@ -32,8 +32,22 @@ def create_recipe():
         get_schema=RecipeSchema
     )
     manager.create_object(
-        data=request.get_json()
+        data=request.get_json(),
+        exclude_for_db='tags'
     )
+    
+    if manager.success:
+        # Add tags:
+        tags = manager.schema_data.tags
+
+        if tags:
+            recipe: Recipe = manager.object
+            
+            recipe.tags = RecipeTag.query.filter(
+                RecipeTag.id.in_(tags)
+            ).all()
+            
+            manager.commit_changes()
 
     response = manager.generate_response()
     return response
@@ -81,8 +95,7 @@ def edit_recipe(id: int):
         abort(401)
     if not is_owner_or_superuser(recipe.author):
         abort(403)
-    
-    
+
     manager = ObjectManager(
         db_model=Recipe,
         update_schema=RecipeUpdate,
@@ -95,7 +108,6 @@ def edit_recipe(id: int):
 
     response = manager.generate_response()
     return response
-
 
 
 @recipes_bp.route('/recipes/<int:id>', methods=['DELETE'])
@@ -144,7 +156,7 @@ def publish_recipe(id: int):
     )
     manager.object.recipe_id = id
     manager.commit_changes()
-    
+
     response = manager.generate_response()
 
     return response
@@ -196,7 +208,7 @@ def update_recipe_application(id: int):
     application = RecipeApp.query.filter_by(id=id).first()
     if not application:
         abort(404)
-        
+
     application_manager = ObjectManager(
         db_model=RecipeApp,
         update_schema=RecipeAppUpdate,
@@ -209,7 +221,7 @@ def update_recipe_application(id: int):
     # Update the `last_reviewed_by` field
     application_manager.object.last_reviewed_by_id = current_user.id
     application_manager.commit_changes()
-    
+
     if application_manager.object.status == RecipeApp.STATUSES.ACCEPTED:
         # Update the recipe's `is_published` to True
         recipe_manager = ObjectManager(
@@ -300,7 +312,7 @@ def update_recipe_tag(id: int):
         obj=tag,
         data=request.get_json()
     )
-    
+
     response = manager.generate_response()
     return response
 

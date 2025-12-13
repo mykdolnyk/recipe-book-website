@@ -14,6 +14,7 @@ def test_create_recipe(client: FlaskClient, app, testing_setup):
         "ingredients": "Water",
         "text": "A very long recipe here",
         "meal_type_id": 1,
+        'tags': [1, 2]
     }
 
     # non-logged in request
@@ -28,6 +29,17 @@ def test_create_recipe(client: FlaskClient, app, testing_setup):
     assert response.status_code == 200
     assert response.get_json()['name'] == data['name']
     assert response.get_json()['author']['id'] == user.id
+    
+    # test tags validation:
+    data['tags'].append(9999)
+    response = client.post('/api/recipes', json=data)
+    assert response.status_code == 400
+    data['tags'].remove(9999)
+    
+    # test meal types validation
+    data['meal_type_id'] = 9999
+    response = client.post('/api/recipes', json=data)
+    assert response.status_code == 400
 
 
 def test_edit_recipe(client: FlaskClient, app, testing_setup):
