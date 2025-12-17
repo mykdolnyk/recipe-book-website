@@ -22,7 +22,7 @@ def create_error_response(*error_messages: ErrorCode | str | Exception, status_c
             error_list.append({'msg': error_msg.value})
         # Exceptions:
         elif isinstance(error_msg, ValidationError):
-            error_list.append(*error_msg.errors(include_url=False, include_context=False))
+            error_list.extend(error_msg.errors(include_url=False, include_context=False))
         elif isinstance(error_msg, Exception):
             error_list.append({'msg': error_msg.args[0]})
         # No match:
