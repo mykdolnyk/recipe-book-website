@@ -81,13 +81,16 @@ class Recipe(db.Model):
         return db.session.query(cls).filter_by(is_visible=True, is_published=True)
 
     @classmethod
-    def ua_query(cls):
+    def ua_query(cls, user: 'User' = None):
         """User-aware query that filters out objects that the current user
         shouldn't see."""
-        if current_user.is_superuser:
+        if user is None:
+            user = current_user
+        
+        if user.is_superuser:
             query = db.session.query(cls)
-            
-        elif current_user.is_anonymous:
+
+        elif user.is_anonymous:
             query = db.session.query(cls).filter(
                 and_(
                     cls.is_visible.is_(True),
@@ -102,7 +105,7 @@ class Recipe(db.Model):
                         cls.is_published.is_(True)
                     ),
                     and_(
-                        cls.author_id == current_user.id,
+                        cls.author_id == user.id,
                         cls.is_visible.is_(True),
                     )
                 )
@@ -117,7 +120,8 @@ class RecipeMix(db.Model):
     """A model representing a mix of several recipes."""
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column()
-    author_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
+    author_id: Mapped[int] = mapped_column(
+        ForeignKey('user.id'), nullable=True)
     author: Mapped["User"] = relationship(back_populates='mixes')
     created_on: Mapped[datetime] = mapped_column(default=datetime.now)
     recipes: Mapped[List[Recipe]] = relationship(

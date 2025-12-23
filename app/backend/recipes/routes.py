@@ -2,13 +2,15 @@ from logging import getLogger
 from flask.blueprints import Blueprint
 from flask import abort, jsonify, request
 from flask_login import current_user, login_required
+from pydantic import ValidationError
+from backend.recipes.helpers import create_recipe_mix
 from backend.utils.misc import ObjectManager, safe_commit
 from backend.utils.errors import ErrorCode, create_error_response
 from backend.utils.login import is_owner_or_superuser, superuser_only
 from backend.utils.pagination import paginate
-from backend.recipes.models import MealType, Recipe, RecipeTag
+from backend.recipes.models import MealType, Recipe, RecipeMix, RecipeTag
 from backend.recipes.models import RecipePublicationApplication as RecipeApp
-from backend.recipes.schemas import RecipeDetailedSchema, RecipePublicationApplicationCreate as RecipeAppCreate, RecipeUpdateStatus
+from backend.recipes.schemas import RecipeDetailedSchema, RecipeMixCreate, RecipeMixSchema, RecipeMixUpdate, RecipePublicationApplicationCreate as RecipeAppCreate, RecipeUpdateStatus
 from backend.recipes.schemas import RecipePublicationApplicationSchema as RecipeAppSchema
 from backend.recipes.schemas import RecipePublicationApplicationUpdate as RecipeAppUpdate
 from backend.recipes.schemas import MealTypeSchema, RecipeCreate, RecipeUpdate, RecipeSchema, RecipeTagCreate, RecipeTagSchema, RecipeTagUpdate
@@ -353,3 +355,93 @@ def get_meal_type(id: int):
 
     response = MealTypeSchema.model_validate(mtype).model_dump()
     return jsonify(response)
+
+
+@recipes_bp.route('/recipe-mixes', methods=['GET'])
+def get_mix_list():
+    if current_user.is_superuser:
+        query = RecipeMix.query
+    else:
+        query = RecipeMix.query.filter(RecipeMix.author_id == current_user.id)
+    
+    pagination = paginate(
+        request_args=request.args,
+        sqlalchemy_query=query,
+        pydantic_model=RecipeMixSchema,
+        list_name='recipe_mix_list',
+    )
+
+    return jsonify(pagination)
+    
+
+@recipes_bp.route('/recipe-mixes/<int:id>', methods=['GET'])
+def get_mix(id: int):
+    if current_user.is_superuser:
+        query = RecipeMix.query
+    else:
+        query = RecipeMix.query.filter(RecipeMix.author_id == current_user.id)
+    
+    recipe_mix = query.filter_by(id=id).first()
+    if not recipe_mix:
+        abort(404)
+
+    response = RecipeMixSchema.model_validate(recipe_mix).model_dump()
+    return jsonify(response)
+
+
+@recipes_bp.route('/recipe-mixes', methods=['POST'])
+def create_mix():
+    try:
+        mix_settings = RecipeMixCreate(**request.get_json()).model_dump()
+    except ValidationError as error:
+        return create_error_response(error)
+    
+    recipe_mix = create_recipe_mix(**mix_settings,
+                                   author=current_user)
+
+    response = RecipeMixSchema.model_validate(recipe_mix).model_dump()
+    return jsonify(response)
+
+
+@recipes_bp.route('/recipe-mixes/<int:id>', methods=['DELETE'])
+def delete_mix(id: int):
+    if current_user.is_superuser:
+        query = RecipeMix.query
+    else:
+        query = RecipeMix.query.filter(RecipeMix.author_id == current_user.id)
+    
+    mix = query.filter_by(id=id).first()
+    if not mix:
+        abort(404)
+
+    db.session.delete(mix)
+    errors = safe_commit(db.session)
+    if errors:
+        return errors
+
+    return '', 204
+
+
+@recipes_bp.route('/recipe-mixes/<int:id>', methods=['PUT'])
+def update_mix(id: int):
+    if current_user.is_superuser:
+        query = RecipeMix.query
+    else:
+        query = RecipeMix.query.filter(RecipeMix.author_id == current_user.id)
+    
+    recipe_mix = query.filter_by(id=id).first()
+    if not recipe_mix:
+        abort(404)
+
+    manager = ObjectManager(
+        db_model=RecipeMix,
+        update_schema=RecipeMixUpdate,
+        get_schema=RecipeMixSchema,
+    )
+    manager.update_object(
+        obj=recipe_mix,
+        data=request.get_json()
+    )
+
+    response = manager.generate_response()
+    return response

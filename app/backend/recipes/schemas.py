@@ -148,3 +148,27 @@ class RecipePublicationApplicationSchema(BaseModel):
 
 class RecipePublicationApplicationUpdate(BaseModel):
     status: Optional[int]
+
+
+class RecipeMixCreate(BaseModel):
+    include_tags: list[int] = None
+    exclude_tags: list[int] = None
+    max_calories: int | None = None
+    min_calories: int | None = None
+    meal_type_ids: list[int]
+    personal_only: bool = False
+    public_only: bool = False
+    
+    
+class RecipeMixSchema(BaseModel):
+    id: int 
+    name: str
+    author: UserSchema | None
+    created_on: datetime
+    recipes: list[RecipeSchema]
+    
+    model_config = ConfigDict(from_attributes=True)
+    
+    
+class RecipeMixUpdate(BaseModel):
+    name: str
