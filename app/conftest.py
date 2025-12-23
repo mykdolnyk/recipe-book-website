@@ -1,7 +1,8 @@
 from flask.testing import FlaskClient
 import pytest
+from backend.recipes.helpers import create_recipe_mix
 from backend.utils.fixtures import load_fixtures
-from backend.recipes.models import Recipe, RecipePublicationApplication, RecipeTag
+from backend.recipes.models import MealType, Recipe, RecipePublicationApplication, RecipeTag
 from backend.users.schemas import UserCreate
 from backend.users.helpers import create_user_instance
 from app_factory import create_app, db
@@ -40,7 +41,7 @@ TEST_PASSWORD = 'r3p[avn!f;1cFGKDS'
 
 @pytest.fixture
 def fake_pw_hashing(monkeypatch):
-    
+
     def fake_hash(password, salt):
         return f"fake-hash-{password.decode()}".encode()
 
@@ -66,6 +67,8 @@ def testing_setup(client: FlaskClient, fake_pw_hashing) -> dict:
         },
         'recipe_tags': [],
         'recipe_pub_apps': [],
+        'recipe_mixes': [],
+        'meal_types': [],
     }
 
     # ----- Create Users -----
@@ -102,34 +105,48 @@ def testing_setup(client: FlaskClient, fake_pw_hashing) -> dict:
         user = create_user_instance(user_schema=schema)
         user.is_superuser = True
         objects['users']['super'].append(user)
-        
+
     db.session.flush()
-        
+
     # ----- Create Recipe Tags -----
-    
+
     for num in range(10):
         tag = RecipeTag(
             name=f"Recipe Tag {num}",
-            slug=f"test-slug-{num}"
+            slug=f"test-tag-slug-{num}"
         )
         db.session.add(tag)
         objects['recipe_tags'].append(tag)
-        
+
     db.session.flush()
-        
+
+    # ----- Create Meal Types -----
+
+    for num in range(5):
+        tag = MealType(
+            name=f"Meal Type {num}",
+            slug=f"test-type-slug-{num}"
+        )
+        db.session.add(tag)
+        objects['meal_types'].append(tag)
+
+    db.session.flush()
+
     # ----- Create Recipes -----
-    
+
     # Published recipes
     for num in range(10):
         recipe = Recipe(
             name=f"Visible Recipe {num}",
-            calories="4",
+            calories=(75 * num),
             cooking_time="1337",
             ingredients="Water",
             text="A very long recipe here",
-            meal_type_id=1,
-            author_id=objects['users']['active'][num].id,  # <- the recipe is owned by 
-            slug=f"test-slug-published-{num}",             # the corresponding user 
+            meal_type_id=(num % 5) + 1,  # <- cycle through meal types
+            # <- the recipe is owned by
+            author_id=objects['users']['active'][num].id,
+            # the corresponding user
+            slug=f"test-slug-published-{num}",
             is_published=True,
             is_visible=True,
         )
@@ -140,40 +157,44 @@ def testing_setup(client: FlaskClient, fake_pw_hashing) -> dict:
     for num in range(10):
         recipe = Recipe(
             name=f"Visible Recipe {num}",
-            calories="4",
+            calories=(75 * num),
             cooking_time="1337",
             ingredients="Water",
             text="A very long recipe here",
-            meal_type_id=1,
-            author_id=objects['users']['active'][num].id,  # <- the recipe is owned by 
-            slug=f"test-slug-personal-{num}",              # the corresponding user 
+            meal_type_id=(num % 5) + 1,  # <- cycle through meal types
+            # <- the recipe is owned by
+            author_id=objects['users']['active'][num].id,
+            # the corresponding user
+            slug=f"test-slug-personal-{num}",
             is_published=False,
             is_visible=True,
         )
         db.session.add(recipe)
         objects['recipes']['personal'].append(recipe)
-        
+
     # Hidden recipes
     for num in range(5):
         recipe = Recipe(
             name=f"Hidden Recipe {num}",
-            calories="0",
+            calories=(75 * num),
             cooking_time="1337",
             ingredients="Water",
             text="A very long recipe here",
-            meal_type_id=1,
-            author_id=objects['users']['active'][num].id,  # <- the recipe is owned by 
-            slug=f"test-slug-hidden-{num}",             # the corresponding user 
+            meal_type_id=(num % 5) + 1,  # <- cycle through meal types
+            # <- the recipe is owned by
+            author_id=objects['users']['active'][num].id,
+            # the corresponding user
+            slug=f"test-slug-hidden-{num}",
             is_published=True,
             is_visible=False,
         )
         db.session.add(recipe)
         objects['recipes']['hidden'].append(recipe)
-        
+
     db.session.flush()
 
     # ----- Create Recipe Publication Applications -----
-        
+
     for num in range(5):
         application = RecipePublicationApplication(
             recipe_id=objects['recipes']['published'][num].id,
@@ -181,6 +202,16 @@ def testing_setup(client: FlaskClient, fake_pw_hashing) -> dict:
         )
         db.session.add(application)
         objects['recipe_pub_apps'].append(application)
+
+    # ----- Create Recipe Mixes -----
+
+    for num in range(10):
+        mix = create_recipe_mix(
+            author=objects['users']['active'][num],
+            meal_type_ids=[1, 2, 3, 4]
+        )
+        db.session.add(mix)
+        objects['recipe_mixes'].append(mix)
 
     db.session.commit()
 
