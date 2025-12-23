@@ -9,10 +9,11 @@ def test_create_recipe(client: FlaskClient, app, testing_setup):
     user = testing_setup['users']['active'][0]
     data = {
         "name": "Tasty meal",
-        "calories": "4",
-        "cooking_time": "1337",
+        "calories": 4,
+        "cooking_time": 1337,
         "ingredients": "Water",
         "text": "A very long recipe here",
+        "description": "A description",
         "meal_type_id": 1,
         'tags': [1, 2]
     }
@@ -30,6 +31,12 @@ def test_create_recipe(client: FlaskClient, app, testing_setup):
     assert response.get_json()['name'] == data['name']
     assert response.get_json()['author']['id'] == user.id
     
+    # test with a None description
+    data['description'] = None
+    response = client.post('/api/recipes', json=data)
+    assert response.status_code == 200
+    assert response.get_json()['description'] is None
+
     # test tags validation:
     data['tags'].append(9999)
     response = client.post('/api/recipes', json=data)

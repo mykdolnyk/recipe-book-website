@@ -54,6 +54,7 @@ class Recipe(db.Model):
     meal_type: Mapped[MealType] = relationship(back_populates='recipes')
 
     ingredients: Mapped[str] = mapped_column()
+    description: Mapped[str] = mapped_column(nullable=True, default=None)
     text: Mapped[str] = mapped_column()
     """The text of the recipe."""
     is_published: Mapped[bool] = mapped_column(default=False)

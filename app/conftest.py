@@ -142,10 +142,10 @@ def testing_setup(client: FlaskClient, fake_pw_hashing) -> dict:
             cooking_time="1337",
             ingredients="Water",
             text="A very long recipe here",
+            description="Some Description",
             meal_type_id=(num % 5) + 1,  # <- cycle through meal types
-            # <- the recipe is owned by
             author_id=objects['users']['active'][num].id,
-            # the corresponding user
+            # ^ the recipe is owned by the corresponding user
             slug=f"test-slug-published-{num}",
             is_published=True,
             is_visible=True,
@@ -161,10 +161,10 @@ def testing_setup(client: FlaskClient, fake_pw_hashing) -> dict:
             cooking_time="1337",
             ingredients="Water",
             text="A very long recipe here",
+            description="Some Description",
             meal_type_id=(num % 5) + 1,  # <- cycle through meal types
-            # <- the recipe is owned by
             author_id=objects['users']['active'][num].id,
-            # the corresponding user
+            # ^ the recipe is owned by the corresponding user
             slug=f"test-slug-personal-{num}",
             is_published=False,
             is_visible=True,
@@ -180,10 +180,10 @@ def testing_setup(client: FlaskClient, fake_pw_hashing) -> dict:
             cooking_time="1337",
             ingredients="Water",
             text="A very long recipe here",
+            description="Some Description",
             meal_type_id=(num % 5) + 1,  # <- cycle through meal types
-            # <- the recipe is owned by
             author_id=objects['users']['active'][num].id,
-            # the corresponding user
+            # ^ the recipe is owned by the corresponding user
             slug=f"test-slug-hidden-{num}",
             is_published=True,
             is_visible=False,

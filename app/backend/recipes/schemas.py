@@ -14,11 +14,11 @@ class MealTypeCreate(BaseModel):
     @property
     def slug(self) -> str:
         return slugify(self.name)
-    
+
     @model_validator(mode='after')
     def check_slug_uniqueness(self):
         if MealType.query.filter_by(slug=self.slug).first():
-            raise ValueError('A non-unique slug is generated for this object. ' 
+            raise ValueError('A non-unique slug is generated for this object. '
                              + 'Consider choosing a unique name.')
         else:
             return self
@@ -43,19 +43,21 @@ class RecipeTagCreate(BaseModel):
     @model_validator(mode='after')
     def check_slug_uniqueness(self):
         if RecipeTag.query.filter_by(slug=self.slug).first():
-            raise ValueError('A non-unique slug is generated for this object. ' 
+            raise ValueError('A non-unique slug is generated for this object. '
                              + 'Consider choosing a unique name.')
         else:
             return self
 
+
 class RecipeTagUpdate(RecipeTagCreate):
     ...
+
 
 class RecipeTagSchema(BaseModel):
     id: int
     name: str
     slug: str
-    
+
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -64,16 +66,17 @@ class RecipeCreate(BaseModel):
     calories: int
     cooking_time: int
     ingredients: str = Field(..., max_length=512)
+    description: str | None = Field(..., max_length=512)
     text: str = Field(..., max_length=8192)
 
     meal_type_id: int
     tags: Optional[list[int]] = Field(default_factory=list)
-    
+
     @computed_field
     @property
     def slug(self) -> str:
         return generate_unique_slug(self.name, Recipe)
-    
+
     @computed_field
     @property
     def author_id(self) -> int:
@@ -83,13 +86,15 @@ class RecipeCreate(BaseModel):
     def validate_tags(tags: list[int]):
         for tag in tags:
             if not RecipeTag.query.filter(RecipeTag.id == tag).first():
-                raise ValueError(f"Recipe Tag with such ID doesn't exist: {tag}.")
+                raise ValueError(
+                    f"Recipe Tag with such ID doesn't exist: {tag}.")
         return tags
 
     @field_validator('meal_type_id')
     def validate_meal_type(meal_type_id: int):
         if not MealType.query.filter(MealType.id == meal_type_id).first():
-            raise ValueError(f"Meal Type with such ID doesn't exist: {meal_type_id}.")
+            raise ValueError(
+                f"Meal Type with such ID doesn't exist: {meal_type_id}.")
         return meal_type_id
 
 
@@ -98,6 +103,7 @@ class RecipeUpdate(BaseModel):
     calories: Optional[int] = None
     cooking_time: Optional[int] = None
     ingredients: Optional[str] = Field(default=None, max_length=512)
+    description: Optional[str] = Field(default=None, max_length=512)
     text: Optional[str] = Field(default=None, max_length=8192)
 
     meal_type_id: Optional[int] = None
@@ -115,6 +121,7 @@ class RecipeSchema(BaseModel):
     calories: int
     cooking_time: int
     ingredients: str
+    description: str | None
     text: str
 
     meal_type: MealTypeSchema | None
@@ -122,9 +129,9 @@ class RecipeSchema(BaseModel):
     tags: list[RecipeTagSchema]
     slug: str
     is_published: bool
-    
+
     model_config = ConfigDict(from_attributes=True)
-    
+
 
 class RecipeDetailedSchema(RecipeSchema):
     is_published: bool
@@ -133,8 +140,8 @@ class RecipeDetailedSchema(RecipeSchema):
 
 class RecipePublicationApplicationCreate(BaseModel):
     comment: str | None = None
-    
-    
+
+
 class RecipePublicationApplicationSchema(BaseModel):
     id: int
     recipe_id: int
@@ -142,7 +149,7 @@ class RecipePublicationApplicationSchema(BaseModel):
     created_on: datetime
     status: int
     last_reviewed_by_id: int | None
-    
+
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -158,17 +165,17 @@ class RecipeMixCreate(BaseModel):
     meal_type_ids: list[int]
     personal_only: bool = False
     public_only: bool = False
-    
-    
+
+
 class RecipeMixSchema(BaseModel):
-    id: int 
+    id: int
     name: str
     author: UserSchema | None
     created_on: datetime
     recipes: list[RecipeSchema]
-    
+
     model_config = ConfigDict(from_attributes=True)
-    
-    
+
+
 class RecipeMixUpdate(BaseModel):
     name: str
