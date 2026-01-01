@@ -1,6 +1,8 @@
 import random
+
 from app_factory import db
-from sqlalchemy import func
+from sqlalchemy import and_, case, desc, func, or_
+from sqlalchemy.orm import Query
 from backend.recipes.models import MealType, Recipe, RecipeMix, RecipeTag
 from backend.users.models import User
 from backend.utils.name_generation import recipe_mix_names
@@ -72,7 +74,7 @@ def create_recipe_mix(include_tags: list[int] = None, exclude_tags: list[int] = 
         author_id=author.id
     )
     recipe_mix.recipes = recipe_list
-    
+
     db.session.add(recipe_mix)
     db.session.commit()
 
@@ -84,3 +86,57 @@ def generate_recipe_mix_name(adjectives_num=1):
     for i in range(adjectives_num):
         name = f"{random.choice(recipe_mix_names.adjectives)} {name}".title()
     return name
+
+
+def search_recipes(request_args) -> Query:
+    query = Recipe.published()
+    
+    # Meal Types
+    meal_types: list[int] = request_args.getlist('meal-types', type=int)
+    if meal_types:
+        query = query.filter(Recipe.meal_type_id.in_(meal_types))
+    
+    # Tags
+    recipe_tags: list[int] = request_args.getlist('recipe-tags', type=int)
+    if recipe_tags:
+        query = query.join(Recipe.tags).filter(RecipeTag.id.in_(recipe_tags))
+    
+    query_text: str = request_args.get('text')
+    if not query_text:
+        return query
+
+    words = query_text.lower().split()
+
+    # Define score. Full string match will grant the highest score
+    score = case(
+        (
+            Recipe.name.ilike(f"%{' '.join(words)}%"),
+            5
+        ),
+        else_=0
+    )
+
+    filters = []
+    for word in words:
+        match_word = f'%{word}%'  # % for partial match
+
+        # Add the score
+        score += (
+            case((Recipe.name.ilike(match_word), 3), else_=0)
+            + case((Recipe.ingredients.ilike(match_word), 2), else_=0)
+            + case((Recipe.description.ilike(match_word), 1), else_=0)
+        )
+
+        # Add the filter condition to the list to be applied later
+        filters.append(
+            or_(
+                Recipe.name.ilike(match_word),
+                Recipe.ingredients.ilike(match_word),
+                Recipe.description.ilike(match_word),
+            )
+        )
+
+    query = query.filter(*filters).distinct().order_by(desc(score))
+    # distinct() to prevent duplicates
+
+    return query

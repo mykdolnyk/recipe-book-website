@@ -1,8 +1,9 @@
+from app_factory import db
 from flask.testing import FlaskClient
 from flask_login import login_user, logout_user
 from sqlalchemy import and_, or_
 
-from backend.recipes.models import Recipe
+from backend.recipes.models import MealType, Recipe, RecipeTag
 
 
 def test_create_recipe(client: FlaskClient, app, testing_setup):
@@ -30,7 +31,7 @@ def test_create_recipe(client: FlaskClient, app, testing_setup):
     assert response.status_code == 200
     assert response.get_json()['name'] == data['name']
     assert response.get_json()['author']['id'] == user.id
-    
+
     # test with a None description
     data['description'] = None
     response = client.post('/api/recipes', json=data)
@@ -42,7 +43,7 @@ def test_create_recipe(client: FlaskClient, app, testing_setup):
     response = client.post('/api/recipes', json=data)
     assert response.status_code == 400
     data['tags'].remove(9999)
-    
+
     # test meal types validation
     data['meal_type_id'] = 9999
     response = client.post('/api/recipes', json=data)
@@ -156,7 +157,7 @@ def test_get_recipe_list(client: FlaskClient, app, testing_setup):
 
     response = client.get('/api/recipes')
     assert response.status_code == 200
-    
+
     total_objects = Recipe.query.filter(
         or_(
             and_(
@@ -171,7 +172,7 @@ def test_get_recipe_list(client: FlaskClient, app, testing_setup):
     )
 
     assert response.get_json()["total"] == total_objects.count()
-    
+
     # superuser
     user = testing_setup['users']['super'][0]
     with app.test_request_context():
@@ -184,11 +185,11 @@ def test_get_recipe_list(client: FlaskClient, app, testing_setup):
 
 def test_delete_recipe(client: FlaskClient, app, testing_setup):
     recipe = testing_setup['recipes']["published"][0]
-    
+
     # non-logged in:
     response = client.delete(f'/api/recipes/{recipe.id}')
     assert response.status_code == 401
-    
+
     # wrong user:
     user = testing_setup['users']['active'][1]
     assert user.id != recipe.author_id
@@ -210,7 +211,7 @@ def test_delete_recipe(client: FlaskClient, app, testing_setup):
     # un-delete the recipe
     recipe.is_visible = True
     Recipe.query.session.commit()
-    
+
     # delete as a superuser
     user = testing_setup['users']['super'][0]
     with app.test_request_context():
@@ -220,8 +221,129 @@ def test_delete_recipe(client: FlaskClient, app, testing_setup):
     assert response.status_code == 204
     response = client.get(f'/api/recipes/{recipe.id}')
     assert response.status_code == 200
-    
+
     with app.test_request_context():
         logout_user()
     response = client.get(f'/api/recipes/{recipe.id}')
     assert response.status_code == 404
+
+
+def test_recipe_search(client: FlaskClient, app, testing_setup):
+    # With no params
+    response = client.get(f'/api/recipes/search')
+    assert response.status_code == 200
+    assert response.get_json()["total"] == len(
+        testing_setup['recipes']['published'])
+
+    # === Test Name ===
+    recipe: Recipe = testing_setup['recipes']['published'][-1]
+    recipe.name = 'Fancy Pasta'
+
+    response = client.get(f'/api/recipes/search?text=fancy')
+    assert response.status_code == 200
+    assert response.get_json()["total"] == 1
+
+    # === Test Ingredients ===
+    recipe: Recipe = testing_setup['recipes']['published'][-2]
+    recipe.ingredients = 'Chicken Nugget'
+
+    response = client.get('/api/recipes/search?text=nugget')
+    assert response.status_code == 200
+    assert response.get_json()["total"] == 1
+
+    # Multiple incomplete words
+    response = client.get('/api/recipes/search?text=nug chick')
+    assert response.status_code == 200
+    assert response.get_json()["total"] == 1
+
+    # === Test Description ===
+    recipe: Recipe = testing_setup['recipes']['published'][-3]
+    recipe.description = 'Delicious Dumplings just for you!'
+
+    response = client.get('/api/recipes/search?text=just for you')
+    assert response.status_code == 200
+    assert response.get_json()["total"] == 1
+
+    # === Test Scoring ===
+    name_recipe: Recipe = testing_setup['recipes']['published'][0]
+    name_recipe.name = 'Recipe Search Testing Name'
+
+    description_recipe: Recipe = testing_setup['recipes']['published'][1]
+    description_recipe.description = 'Recipe Search Testing Description'
+
+    ingredients_recipe: Recipe = testing_setup['recipes']['published'][2]
+    ingredients_recipe.ingredients = 'Recipe Search Testing Ingredients'
+
+    full_name_recipe: Recipe = testing_setup['recipes']['published'][3]
+    full_name_recipe.name = 'Recipe Testing Search Name (full name match)'
+
+    search_query = "Testing Search"
+
+    response = client.get(f'/api/recipes/search?text={search_query}')
+    assert response.status_code == 200
+    results = response.get_json()["recipe_list"]
+    assert len(results) == 4
+    assert results[0]['id'] == full_name_recipe.id
+    assert results[1]['id'] == name_recipe.id
+    assert results[2]['id'] == ingredients_recipe.id
+    assert results[3]['id'] == description_recipe.id
+
+    # === Test No Matches ===
+    response = client.get(
+        '/api/recipes/search?text=textthatisnotpresentanywhere')
+    assert response.status_code == 200
+    assert response.get_json()["total"] == 0
+
+    # === Test Tags ===
+    tag: RecipeTag = testing_setup['recipe_tags'][0]
+    recipe_with_tag: Recipe = testing_setup['recipes']['published'][0]
+    recipe_with_tag.tags.append(tag)
+
+    response = client.get(f'/api/recipes/search?recipe-tags={tag.id}')
+    assert response.status_code == 200
+    assert response.get_json()["total"] == len(tag.recipes) != 0
+
+    # === Test Meal Types ===
+    meal_type: MealType = testing_setup['meal_types'][0]
+    response = client.get(f'/api/recipes/search?meal-types={meal_type.id}')
+    assert response.status_code == 200
+    assert response.get_json()["total"] == Recipe.published().filter(
+        Recipe.meal_type_id == meal_type.id
+    ).count() != 0
+
+    # Multiple meal types
+    additional_meal_type: MealType = testing_setup['meal_types'][1]
+    response = client.get(
+        f'/api/recipes/search?meal-types={meal_type.id}&meal-types={additional_meal_type.id}')
+    assert response.status_code == 200
+    assert response.get_json()["total"] == Recipe.published().filter(
+        or_(
+            Recipe.meal_type_id == meal_type.id,
+            Recipe.meal_type_id == additional_meal_type.id
+        )
+    ).count() != 0
+
+    # === Test Combining All ===
+    tag = testing_setup['recipe_tags'][0]
+    meal_type = testing_setup['meal_types'][0]
+    
+    for idx, recipe in enumerate(testing_setup['recipes']['published'][:10]):
+        # every 2nd recipe has "fancy" in name
+        if idx % 2 == 0:
+            recipe.name = f'fAnCy recipe {idx}'
+        
+        # every 4th recipe has the corresponding meal type
+        if idx % 4 == 0:
+            recipe.meal_type_id = meal_type.id
+        
+        # 2 recipes every 8 recipes idk
+        if idx % 8 < 2:
+            recipe.tags.append(tag)
+        
+    # for 10 recipes there would be only 2 recipes matchin all 3 criteria
+    db.session.commit()
+    
+    response = client.get(
+        f'/api/recipes/search?text=fancy&recipe-tags={tag.id}&meal-types={meal_type.id}')
+    assert response.status_code == 200
+    assert response.get_json()["total"] == 2

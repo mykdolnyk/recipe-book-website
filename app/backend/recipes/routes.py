@@ -3,7 +3,7 @@ from flask.blueprints import Blueprint
 from flask import abort, jsonify, request
 from flask_login import current_user, login_required
 from pydantic import ValidationError
-from backend.recipes.helpers import create_recipe_mix
+from backend.recipes.helpers import create_recipe_mix, search_recipes
 from backend.utils.misc import ObjectManager, safe_commit
 from backend.utils.errors import ErrorCode, create_error_response
 from backend.utils.login import is_owner_or_superuser, superuser_only
@@ -445,3 +445,19 @@ def update_mix(id: int):
 
     response = manager.generate_response()
     return response
+
+
+@recipes_bp.route('/recipes/search', methods=['GET'])
+def recipe_search():
+    request_args = request.args
+    
+    query = search_recipes(request_args=request_args)
+    
+    pagination = paginate(
+        request_args=request_args,
+        sqlalchemy_query=query,
+        pydantic_model=RecipeSchema,
+        list_name='recipe_list',
+    )
+
+    return jsonify(pagination)
