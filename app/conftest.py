@@ -122,16 +122,9 @@ def testing_setup(client: FlaskClient, fake_pw_hashing) -> dict:
 
     # ----- Create Meal Types -----
 
-    for num in range(5):
-        tag = MealType(
-            name=f"Meal Type {num}",
-            slug=f"test-type-slug-{num}"
-        )
-        db.session.add(tag)
-        objects['meal_types'].append(tag)
-
-    db.session.flush()
-
+    objects['meal_types'] = MealType.query.all()
+    # they are already being loaded in `load_fixtures` before
+    
     # ----- Create Recipes -----
 
     # Published recipes
