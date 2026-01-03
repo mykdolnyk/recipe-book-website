@@ -63,6 +63,7 @@ class ObjectManager:
 
         # Create DB object
         new_object = self.db_model(**schema.model_dump(exclude=exclude_for_db))
+        self.object = new_object
         self._session.add(new_object)
 
         if commit:
@@ -70,7 +71,6 @@ class ObjectManager:
             if self._errors:
                 return None
 
-        self.object = new_object
         self.success = True
         return new_object
     

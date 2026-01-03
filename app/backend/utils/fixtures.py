@@ -1,4 +1,5 @@
 import json
+from backend.users.models import ProfilePicture
 import config
 from backend.recipes.models import MealType
 from app_factory import db
@@ -8,6 +9,7 @@ def load_fixtures():
     total_entries_pasted = 0
     total_entries_skipped = 0
 
+    # Meal Types
     with open(config.FIXTURES_DIR / 'mealtypes.json', 'r', encoding='utf-8') as f:
         data = json.load(f)
 
@@ -17,6 +19,18 @@ def load_fixtures():
             total_entries_skipped += 1
         else:
             db.session.add(meal_type)
+            total_entries_pasted += 1
+
+    # Profile Pictures
+    with open(config.FIXTURES_DIR / 'profilepictures.json', 'r', encoding='utf-8') as f:
+        data = json.load(f)
+
+    for entry in data:
+        profile_picture = ProfilePicture(**entry)
+        if ProfilePicture.query.filter(ProfilePicture.id == profile_picture.id).first():
+            total_entries_skipped += 1
+        else:
+            db.session.add(profile_picture)
             total_entries_pasted += 1
 
     db.session.commit()

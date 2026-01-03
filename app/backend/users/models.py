@@ -1,5 +1,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, List
+
+from sqlalchemy import ForeignKey
 from app_factory import db
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from flask_login import UserMixin
@@ -14,6 +16,8 @@ class User(db.Model, UserMixin):
     
     name: Mapped[str] = mapped_column()
     bio: Mapped[str] = mapped_column(default='')
+    profile_picture_id: Mapped[int] = mapped_column(ForeignKey('profile_picture.id'))
+    profile_picture: Mapped['ProfilePicture'] = relationship(back_populates='users')
 
     recipes: Mapped[List['Recipe']] = relationship(back_populates='author')
     mixes: Mapped[List['RecipeMix']] = relationship(back_populates='author')
@@ -32,3 +36,10 @@ class User(db.Model, UserMixin):
 
     def __repr__(self):
         return f"<User: id={self.id}, name='{self.name}'>"
+    
+
+class ProfilePicture(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True)
+    file_path: Mapped[str] = mapped_column()
+    users: Mapped[List[User]] = relationship(back_populates='profile_picture')
+    

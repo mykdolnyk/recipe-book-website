@@ -16,8 +16,11 @@ password_policy = PasswordPolicy.from_names(**config.PASSWORD_POLICY)
 
 def create_app(config_object=config, overrides=None):
     logging_config(config.LOGGING)
-    
-    app = Flask(__name__)
+
+    app = Flask(
+        __name__,
+        static_url_path=config.STATIC_URL_PATH.as_posix()
+    )
     app.config.from_object(config_object)
     if overrides:
         app.config.update(overrides)
@@ -47,7 +50,7 @@ def create_app(config_object=config, overrides=None):
     from backend.recipes.routes import recipes_bp
     import backend.recipes.cli
     from backend.utils.cli import load_fixtures_command
-    
+
     app.cli.add_command(load_fixtures_command)
     app.register_blueprint(user_bp)
     app.register_blueprint(recipes_bp)

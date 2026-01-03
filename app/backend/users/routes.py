@@ -1,3 +1,4 @@
+import random
 from flask_login import current_user, login_user, logout_user
 from logging import getLogger
 from flask.blueprints import Blueprint
@@ -6,7 +7,7 @@ from backend.utils.pagination import paginate
 from backend.utils.misc import ObjectManager, safe_commit
 from backend.utils.login import is_owner_or_superuser
 from backend.users.schemas import UserCreate, UserDetailedSchema, UserUpdate, UserLogin, UserSchema
-from backend.users.models import User
+from backend.users.models import ProfilePicture, User
 from backend.utils.errors import create_error_response, ErrorCode
 from flask import abort, jsonify, request
 from app_factory import db
@@ -28,7 +29,7 @@ def get_user_list():
         query = User.query
     else:
         query = User.active()
-    
+
     pagination = paginate(
         request_args=request.args,
         sqlalchemy_query=query,
@@ -40,15 +41,24 @@ def get_user_list():
 
 
 @user_bp.route('/users', methods=["POST"])
-def register_user():
+def register_user():    
     manager = ObjectManager(
         db_model=User,
         create_schema=UserCreate,
         get_schema=UserSchema
     )
-    manager.create_object(request.get_json(),
-        exclude_for_db=['password_confirm'])
+    manager.create_object(
+        request.get_json(),
+        exclude_for_db=['password_confirm'],
+        commit=False
+    )
+    with db.session.no_autoflush:
+        pfp_ids = [pfp.id for pfp in ProfilePicture.query.all()]
     
+    if manager.success:
+        manager.object.profile_picture_id = random.choice(pfp_ids)
+        manager.commit_changes()
+
     response = manager.generate_response()
     return response
 
@@ -113,14 +123,14 @@ def delete_user(id: int):
 def login():
     if current_user.is_authenticated:
         return create_error_response('Already logged in.', status_code=400)
-    
+
     try:
         login_schema = UserLogin(**request.get_json())
     except ValidationError as error:
         return jsonify({"errors": error.errors(include_url=False, include_context=False)}), 400
 
     user: User = login_schema.user
-    
+
     login_user(user)
 
     response = {
@@ -134,7 +144,7 @@ def login():
 def logout():
     if not current_user.is_authenticated:
         return create_error_response('Already logged out.', status_code=200)
-    
+
     logout_user()
 
     return '', 200

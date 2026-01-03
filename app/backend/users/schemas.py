@@ -1,9 +1,11 @@
 from typing import Self
 from pydantic import BaseModel, ConfigDict, Field, EmailStr, computed_field, field_validator, model_validator
 from backend.utils.errors import PasswordRequirements
-from backend.users.models import User
+from backend.users.models import ProfilePicture, User
 from app_factory import password_policy
 import bcrypt
+
+import config
 
 
 def check_email_availability(email: EmailStr):
@@ -52,13 +54,22 @@ class UserUpdate(BaseModel):
     name: str | None = Field(default=None, max_length=64)
     bio: str | None = Field(default=None, max_length=512)
     email: EmailStr | None = None
+    profile_picture_id: int | None = None
 
     _validate_email = field_validator('email')(check_email_availability)
+    
+    @field_validator('profile_picture_id')
+    def validate_profile_picture_id(profile_picture_id: int):
+        if not ProfilePicture.query.filter_by(id=profile_picture_id).first():
+            raise ValueError(
+                'Profile Picture with such ID doesn\'t exist.')
+        return profile_picture_id
 
 
 class UserSchema(BaseModel):
     id: int
     name: str
+    profile_picture: 'ProfilePictureSchema'
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -96,3 +107,15 @@ class UserLogin(BaseModel):
 
     model_config = ConfigDict(from_attributes=True,
                               arbitrary_types_allowed=True)
+
+
+class ProfilePictureSchema(BaseModel):
+    id: int
+    file_path: str = Field(exclude=True)
+    
+    @computed_field
+    @property
+    def path(self) -> str:
+        return (config.STATIC_URL_PATH / self.file_path).as_posix()
+    
+    model_config = ConfigDict(from_attributes=True)
