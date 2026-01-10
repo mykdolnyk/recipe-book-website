@@ -1,14 +1,14 @@
 [
     {
         "id": 1,
-        "file_path": "users/profile_pictures/chemical.png"
+        "file_path": "media/users/profile_pictures/chemical.png"
     },
     {
         "id": 2,
-        "file_path": "users/profile_pictures/dancer.png"
+        "file_path": "media/users/profile_pictures/dancer.png"
     },
     {
         "id": 3,
-        "file_path": "users/profile_pictures/lime.png"
+        "file_path": "media/users/profile_pictures/lime.png"
     }
 ]
