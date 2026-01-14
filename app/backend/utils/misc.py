@@ -112,3 +112,4 @@ class ObjectManager:
             self._errors.append(error)
             self.success = False
             return None
+        

@@ -3,18 +3,24 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Query
 
 
-def paginate(request_args: dict, sqlalchemy_query: Query, pydantic_model: BaseModel, **kwargs):
+def paginate(request_args: dict, sqlalchemy_query: Query, pydantic_model: BaseModel, no_per_page_limit=False, **kwargs):
     try:
         page = int(request_args.get('page', 1))
         per_page = int(request_args.get(
             'per-page', kwargs.get('per_page', 5)))
     except ValueError:
         abort(400)
+        
+    if no_per_page_limit:
+        per_page = 999
+        max_per_page = 999
+    else:
+        per_page = per_page
+        max_per_page = 25
 
     pagination = sqlalchemy_query.paginate(page=page,
                                            per_page=per_page,
-                                           max_per_page=kwargs.get(
-                                               'max_per_page', 25),
+                                           max_per_page=max_per_page,
                                            error_out=False)
 
     obj_list = [pydantic_model.model_validate(obj).model_dump()

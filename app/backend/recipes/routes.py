@@ -342,6 +342,7 @@ def get_meal_type_list():
         sqlalchemy_query=MealType.query,
         pydantic_model=MealTypeSchema,
         list_name='meal_type_list',
+        no_per_page_limit=True
     )
 
     return jsonify(pagination)

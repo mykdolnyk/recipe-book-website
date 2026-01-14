@@ -101,6 +101,16 @@ def search_recipes(request_args) -> Query:
     if recipe_tags:
         query = query.join(Recipe.tags).filter(RecipeTag.id.in_(recipe_tags))
     
+    # Calories
+    calories = request_args.get('calories')
+    if calories:
+        query = query.filter(Recipe.calories <= int(calories))
+        
+    # Cooking time
+    cooking_time = request_args.get('minutes')
+    if cooking_time:
+        query = query.filter(Recipe.cooking_time <= int(cooking_time))
+        
     query_text: str = request_args.get('text')
     if not query_text:
         return query
