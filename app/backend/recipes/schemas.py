@@ -145,7 +145,7 @@ class RecipePublicationApplicationCreate(BaseModel):
 class RecipePublicationApplicationSchema(BaseModel):
     id: int
     recipe_id: int
-    comment: str
+    comment: str | None
     created_on: datetime
     status: int
     last_reviewed_by_id: int | None

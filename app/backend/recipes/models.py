@@ -139,7 +139,7 @@ class RecipePublicationApplication(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     recipe_id: Mapped[int] = mapped_column(ForeignKey('recipe.id'))
     recipe: Mapped[Recipe] = relationship(back_populates='applications')
-    comment: Mapped[str] = mapped_column()
+    comment: Mapped[Optional[str]] = mapped_column()
     created_on: Mapped[datetime] = mapped_column(default=datetime.now)
     status: Mapped[int] = mapped_column(default=STATUSES.NOT_REVIEWED)
     last_reviewed_by: Mapped["User"] = relationship(
