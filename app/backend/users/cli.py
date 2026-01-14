@@ -17,7 +17,6 @@ user_bp.cli.help = 'Perform User-related operations.'
 @click.argument('name')
 @click.password_option()
 def create_superuser(name: str, email: str, password: str):
-    click.echo(f'|{password}|')
     if User.query.filter(func.lower(User.email) == email.lower()).first():
         raise click.ClickException('The email is already taken.')
     
