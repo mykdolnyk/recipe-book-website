@@ -49,6 +49,8 @@ def create_app(config_object=config, overrides=None):
     from backend.users.routes import user_bp
     from backend.recipes.routes import recipes_bp
     import backend.recipes.cli
+    import backend.users.cli
+    
     from backend.utils.cli import load_fixtures_command
 
     app.cli.add_command(load_fixtures_command)
