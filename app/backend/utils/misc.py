@@ -4,6 +4,7 @@ from pydantic import BaseModel, ValidationError
 from slugify import slugify as py_slugify
 from random import randint
 from backend.utils.errors import create_error_response
+from sqlalchemy import inspect
 
 
 logger = getLogger(name=__name__)
@@ -86,8 +87,20 @@ class ObjectManager:
 
         # Update DB object
         new_data = schema.model_dump(exclude_unset=True)
+        
         for key, value in new_data.items():
-            setattr(obj, key, value)
+            # Check if the field is a relationship (m2m)
+            mapper = inspect(obj).mapper
+            if key in mapper.relationships:
+                # Obtain the model instance from the relationship
+                related_model = mapper.relationships[key].mapper.class_
+                # Get the objects
+                model_objects = related_model.query.filter(related_model.id.in_(value)).all()
+                # Set them
+                setattr(obj, key, model_objects)
+            else:
+                # Usual set operation
+                setattr(obj, key, value)
 
         if commit:
             self.commit_changes()
