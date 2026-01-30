@@ -30,19 +30,22 @@ CUSTOM_MESSAGES = {
 """Dictionary containing formatting strings for Validation Errors."""
 
 
-def convert_validation_errors(
-        e: ValidationError, custom_messages: dict[str, str]) -> list[ErrorDetails]:
+def convert_validation_errors(e: ValidationError, custom_messages: dict[str, str]) -> list[ErrorDetails]:
     new_errors: list[ErrorDetails] = []
+
     for error in e.errors():
-        custom_message_code = f"{error['type']}:{','.join(error['ctx'].keys())}"
+        error_ctx = error.get('ctx', '')
+        if error_ctx:
+            custom_message_code = f"{error['type']}:{','.join(error['ctx'].keys())}"
+        else:
+            custom_message_code = f"{error['type']}:{error}"
+            
         custom_message = custom_messages.get(custom_message_code)
         if custom_message:
-            ctx = error.get('ctx')
-            error['msg'] = (custom_message.format(
-                **ctx) if ctx else custom_message)
+            error['msg'] = (custom_message.format(**error_ctx) if error_ctx else custom_message)
             # Clear the unneccessarry details
-            error.pop('url')
-            error.pop('ctx')
+            error.pop('url', None)
+            error.pop('ctx', None)
         new_errors.append(error)
     return new_errors
 

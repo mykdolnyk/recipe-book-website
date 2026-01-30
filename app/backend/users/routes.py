@@ -127,7 +127,6 @@ def login():
     try:
         login_schema = UserLogin(**request.get_json())
     except ValidationError as error:
-        # return jsonify({"errors": error.errors(include_url=False, include_context=False)}), 400
         return create_error_response(error)
     user: User = login_schema.user
 
