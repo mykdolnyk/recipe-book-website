@@ -19,7 +19,10 @@ def create_recipe_mix(include_tags: list[int] = None, exclude_tags: list[int] = 
     if not meal_type_ids:
         raise ValueError('Meal Types were not specified.')
 
-    recipe_query = Recipe.ua_query(user=author)
+    recipe_query = Recipe.ua_query(
+        user=author,
+        force_exclude_hidden=True,
+        force_exclude_unpublished=True)
 
     # Calories
     if max_calories is not None:
@@ -90,27 +93,27 @@ def generate_recipe_mix_name(adjectives_num=1):
 
 def search_recipes(request_args) -> Query:
     query = Recipe.published()
-    
+
     # Meal Types
     meal_types: list[int] = request_args.getlist('meal-types', type=int)
     if meal_types:
         query = query.filter(Recipe.meal_type_id.in_(meal_types))
-    
+
     # Tags
     recipe_tags: list[int] = request_args.getlist('recipe-tags', type=int)
     if recipe_tags:
         query = query.join(Recipe.tags).filter(RecipeTag.id.in_(recipe_tags))
-    
+
     # Calories
     calories = request_args.get('calories')
     if calories:
         query = query.filter(Recipe.calories <= int(calories))
-        
+
     # Cooking time
     cooking_time = request_args.get('minutes')
     if cooking_time:
         query = query.filter(Recipe.cooking_time <= int(cooking_time))
-        
+
     query_text: str = request_args.get('text')
     if not query_text:
         return query

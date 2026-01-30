@@ -82,7 +82,7 @@ class Recipe(db.Model):
         return db.session.query(cls).filter_by(is_visible=True, is_published=True)
 
     @classmethod
-    def ua_query(cls, user: 'User' = None):
+    def ua_query(cls, user: 'User' = None, force_exclude_hidden=False, force_exclude_unpublished=False):
         """User-aware query that filters out objects that the current user
         shouldn't see."""
         if user is None:
@@ -111,6 +111,12 @@ class Recipe(db.Model):
                     )
                 )
             )
+        if force_exclude_hidden:
+            query = query.filter(cls.is_visible == True)
+            
+        if force_exclude_unpublished:
+            query = query.filter(cls.is_published == True)
+        
         return query
 
     def __repr__(self):
