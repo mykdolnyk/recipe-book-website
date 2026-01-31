@@ -57,9 +57,16 @@ def create_recipe():
 
 @recipes_bp.route('/recipes', methods=['GET'])
 def get_recipe_list():
+    query = Recipe.ua_query(force_exclude_hidden=True)
+    
+    # Filter by author if needed
+    author_id = request.args.get('author_id')
+    if author_id:
+        query = query.filter(Recipe.author_id == int(author_id))
+        
     pagination = paginate(
         request_args=request.args,
-        sqlalchemy_query=Recipe.ua_query(),
+        sqlalchemy_query=query,
         pydantic_model=RecipeSchema,
         list_name='recipe_list',
     )
@@ -158,7 +165,6 @@ def publish_recipe(id: int):
     )
     manager.object.recipe_id = id
     manager.commit_changes()
-
     response = manager.generate_response()
 
     return response
@@ -364,6 +370,8 @@ def get_mix_list():
         query = RecipeMix.query
     else:
         query = RecipeMix.query.filter(RecipeMix.author_id == current_user.id)
+        
+    query = query.order_by(RecipeMix.created_on.desc())
     
     pagination = paginate(
         request_args=request.args,
