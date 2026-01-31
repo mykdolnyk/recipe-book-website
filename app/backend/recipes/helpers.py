@@ -22,7 +22,7 @@ def create_recipe_mix(include_tags: list[int] = None, exclude_tags: list[int] = 
     recipe_query = Recipe.ua_query(
         user=author,
         force_exclude_hidden=True,
-        force_exclude_unpublished=True)
+        force_exclude_not_personal_unpublished=True)
 
     # Calories
     if max_calories is not None:
