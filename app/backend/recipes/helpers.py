@@ -70,6 +70,9 @@ def create_recipe_mix(include_tags: list[int] = None, exclude_tags: list[int] = 
                            .order_by(Recipe.id)
                            .first()
                            )
+        
+    if len(recipe_list) == 0:
+        return None
 
     recipe_name = generate_recipe_mix_name()
     recipe_mix = RecipeMix(

@@ -11,6 +11,7 @@ class ErrorCode(Enum):
     USER_NOT_FOUND = "User with such ID doesn't exist."
     UNKNOWN = "An unknown error has occured."
     ALREADY_EXISTS = "Such object already exists."
+    NO_COMPATIBLE_RECIPES = "No suitable recipes were found. Please try adjusting the settings and try again."
 
 class PasswordRequirements(Enum):
     """Enum containing password requirement messages."""

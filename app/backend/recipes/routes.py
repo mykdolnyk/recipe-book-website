@@ -399,6 +399,9 @@ def create_mix():
     
     recipe_mix = create_recipe_mix(**mix_settings,
                                    author=current_user)
+    
+    if recipe_mix is None:
+        return create_error_response(ErrorCode.NO_COMPATIBLE_RECIPES)
 
     response = RecipeMixSchema.model_validate(recipe_mix).model_dump()
     return jsonify(response)
