@@ -8,7 +8,7 @@ from backend.utils.misc import ObjectManager, safe_commit
 from backend.utils.errors import ErrorCode, create_error_response
 from backend.utils.login import is_owner_or_superuser, superuser_only
 from backend.utils.pagination import paginate
-from backend.recipes.models import MealType, Recipe, RecipeMix, RecipeTag
+from backend.recipes.models import Like, MealType, Recipe, RecipeMix, RecipeTag
 from backend.recipes.models import RecipePublicationApplication as RecipeApp
 from backend.recipes.schemas import RecipeDetailedSchema, RecipeMixCreate, RecipeMixSchema, RecipeMixUpdate, RecipePublicationApplicationCreate as RecipeAppCreate, RecipeUpdateStatus
 from backend.recipes.schemas import RecipePublicationApplicationSchema as RecipeAppSchema
@@ -37,18 +37,18 @@ def create_recipe():
         data=request.get_json(),
         exclude_for_db='tags'
     )
-    
+
     if manager.success:
         # Add tags:
         tags = manager.schema_data.tags
 
         if tags:
             recipe: Recipe = manager.object
-            
+
             recipe.tags = RecipeTag.query.filter(
                 RecipeTag.id.in_(tags)
             ).all()
-            
+
             manager.commit_changes()
 
     response = manager.generate_response()
@@ -57,13 +57,15 @@ def create_recipe():
 
 @recipes_bp.route('/recipes', methods=['GET'])
 def get_recipe_list():
-    query = Recipe.ua_query(force_exclude_hidden=True)
-    
+    query = Recipe.ua_query(
+        force_exclude_hidden=True, 
+        force_exclude_not_personal_unpublished=True)
+
     # Filter by author if needed
     author_id = request.args.get('author_id')
     if author_id:
         query = query.filter(Recipe.author_id == int(author_id))
-        
+
     pagination = paginate(
         request_args=request.args,
         sqlalchemy_query=query,
@@ -370,9 +372,9 @@ def get_mix_list():
         query = RecipeMix.query
     else:
         query = RecipeMix.query.filter(RecipeMix.author_id == current_user.id)
-        
+
     query = query.order_by(RecipeMix.created_on.desc())
-    
+
     pagination = paginate(
         request_args=request.args,
         sqlalchemy_query=query,
@@ -381,7 +383,7 @@ def get_mix_list():
     )
 
     return jsonify(pagination)
-    
+
 
 @recipes_bp.route('/recipe-mixes/<int:id>', methods=['GET'])
 def get_mix(id: int):
@@ -389,7 +391,7 @@ def get_mix(id: int):
         query = RecipeMix.query
     else:
         query = RecipeMix.query.filter(RecipeMix.author_id == current_user.id)
-    
+
     recipe_mix = query.filter_by(id=id).first()
     if not recipe_mix:
         abort(404)
@@ -404,10 +406,10 @@ def create_mix():
         mix_settings = RecipeMixCreate(**request.get_json()).model_dump()
     except ValidationError as error:
         return create_error_response(error)
-    
+
     recipe_mix = create_recipe_mix(**mix_settings,
                                    author=current_user)
-    
+
     if recipe_mix is None:
         return create_error_response(ErrorCode.NO_COMPATIBLE_RECIPES)
 
@@ -421,7 +423,7 @@ def delete_mix(id: int):
         query = RecipeMix.query
     else:
         query = RecipeMix.query.filter(RecipeMix.author_id == current_user.id)
-    
+
     mix = query.filter_by(id=id).first()
     if not mix:
         abort(404)
@@ -440,7 +442,7 @@ def update_mix(id: int):
         query = RecipeMix.query
     else:
         query = RecipeMix.query.filter(RecipeMix.author_id == current_user.id)
-    
+
     recipe_mix = query.filter_by(id=id).first()
     if not recipe_mix:
         abort(404)
@@ -462,9 +464,9 @@ def update_mix(id: int):
 @recipes_bp.route('/recipes/search', methods=['GET'])
 def recipe_search():
     request_args = request.args
-    
+
     query = search_recipes(request_args=request_args)
-    
+
     pagination = paginate(
         request_args=request_args,
         sqlalchemy_query=query,
@@ -473,3 +475,66 @@ def recipe_search():
     )
 
     return jsonify(pagination)
+
+
+@recipes_bp.route('/recipes/<int:id>/like', methods=['GET'])
+def check_recipe_like(id: int):
+    recipe = Recipe.ua_query().filter_by(id=id).first()
+    if not recipe:
+        abort(404)
+    if current_user.is_anonymous:
+        abort(401)
+
+    like = Like.query.filter(Like.recipe_id == recipe.id,
+                             Like.user_id == current_user.id).first()
+
+    response = {
+        "recipe_id": recipe.id,
+        "user_id": current_user.id,
+        "liked": True if like is not None else False
+    }
+
+    return jsonify(response)
+
+
+@recipes_bp.route('/recipes/<int:id>/like', methods=['POST'])
+def like_recipe(id: int):
+    recipe = Recipe.ua_query().filter_by(id=id).first()
+    if not recipe:
+        abort(404)
+    if current_user.is_anonymous:
+        abort(401)
+
+    like = Like.query.filter(Like.recipe_id == recipe.id,
+                             Like.user_id == current_user.id).first()
+
+    if like is not None:
+        return '', 204
+
+    like = Like(
+        recipe_id=recipe.id,
+        user_id=current_user.id
+    )
+    db.session.add(like)
+    db.session.commit()
+
+    return '', 201
+
+
+@recipes_bp.route('/recipes/<int:id>/like', methods=['DELETE'])
+def unlike_recipe(id: int):
+    recipe = Recipe.ua_query().filter_by(id=id).first()
+    if not recipe:
+        abort(404)
+    if current_user.is_anonymous:
+        abort(401)
+
+    like = Like.query.filter(Like.recipe_id == recipe.id,
+                             Like.user_id == current_user.id).first()
+    if like is None:
+        return '', 204
+
+    db.session.delete(like)
+    db.session.commit()
+
+    return '', 204

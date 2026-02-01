@@ -166,3 +166,7 @@ class Like(db.Model):
     recipe_id: Mapped[int] = mapped_column(ForeignKey('recipe.id'))
     recipe: Mapped[Recipe] = relationship(back_populates='likes')
     created_on: Mapped[datetime] = mapped_column(default=datetime.now)
+
+    __table_args__ = (
+        db.UniqueConstraint('recipe_id', 'user_id', name='uq_like_recipe_user'),
+    )
