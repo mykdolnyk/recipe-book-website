@@ -129,6 +129,8 @@ class RecipeSchema(BaseModel):
     tags: list[RecipeTagSchema]
     slug: str
     is_published: bool
+    
+    like_count: int
 
     model_config = ConfigDict(from_attributes=True)
 

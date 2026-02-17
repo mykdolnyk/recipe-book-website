@@ -1,11 +1,11 @@
 from datetime import datetime
 import enum
 from typing import List, TYPE_CHECKING, Optional
-
+from sqlalchemy.orm import column_property
 from flask_login import current_user
 from app_factory import db
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import Column, ForeignKey, Integer, Table, and_, or_
+from sqlalchemy import Column, ForeignKey, Integer, Table, and_, func, or_, select
 if TYPE_CHECKING:
     from app.backend.users.models import User
 
@@ -41,6 +41,20 @@ class RecipeTag(db.Model):
         secondary=recipe_tag_association, back_populates='tags')
 
 
+class Like(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
+    user: Mapped["User"] = relationship(back_populates='liked')
+    recipe_id: Mapped[int] = mapped_column(ForeignKey('recipe.id'))
+    recipe: Mapped["Recipe"] = relationship(back_populates='likes')
+    created_on: Mapped[datetime] = mapped_column(default=datetime.now)
+
+    __table_args__ = (
+        db.UniqueConstraint('recipe_id', 'user_id',
+                            name='uq_like_recipe_user'),
+    )
+
+
 class Recipe(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column()
@@ -73,6 +87,12 @@ class Recipe(db.Model):
                          ] = relationship(back_populates='recipe')
     likes: Mapped[List['Like']] = relationship(back_populates='recipe')
 
+    like_count = column_property(
+        select(func.count(Like.id))
+        .where(Like.recipe_id == id)
+        .scalar_subquery()
+    )
+
     @classmethod
     def visible(cls):
         return db.session.query(cls).filter_by(is_visible=True)
@@ -87,7 +107,7 @@ class Recipe(db.Model):
         shouldn't see."""
         if user is None:
             user = current_user
-        
+
         if user.is_superuser:
             query = db.session.query(cls)
 
@@ -155,18 +175,4 @@ class RecipePublicationApplication(db.Model):
     status: Mapped[int] = mapped_column(default=STATUSES.NOT_REVIEWED)
     last_reviewed_by: Mapped["User"] = relationship(
         back_populates='reviewed_applications')
-    last_reviewed_by_id: Mapped[Optional[int]
-                                ] = mapped_column(ForeignKey('user.id'))
-
-
-class Like(db.Model):
-    id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey('user.id'))
-    user: Mapped["User"] = relationship(back_populates='liked')
-    recipe_id: Mapped[int] = mapped_column(ForeignKey('recipe.id'))
-    recipe: Mapped[Recipe] = relationship(back_populates='likes')
-    created_on: Mapped[datetime] = mapped_column(default=datetime.now)
-
-    __table_args__ = (
-        db.UniqueConstraint('recipe_id', 'user_id', name='uq_like_recipe_user'),
-    )
+    last_reviewed_by_id: Mapped[Optional[int]] = mapped_column(ForeignKey('user.id'))

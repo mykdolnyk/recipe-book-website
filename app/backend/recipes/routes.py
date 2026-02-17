@@ -58,7 +58,7 @@ def create_recipe():
 @recipes_bp.route('/recipes', methods=['GET'])
 def get_recipe_list():
     query = Recipe.ua_query(
-        force_exclude_hidden=True, 
+        force_exclude_hidden=True,
         force_exclude_not_personal_unpublished=True)
 
     # Filter by author if needed
