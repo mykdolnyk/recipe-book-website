@@ -69,7 +69,7 @@ def get_user_info(id: int):
 
     if not user:
         return create_error_response(ErrorCode.USER_NOT_FOUND)
-
+    # todo: Cache me!
     response = UserDetailedSchema.model_validate(user).model_dump()
     return jsonify(response)
 

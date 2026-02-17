@@ -76,6 +76,8 @@ class UserSchema(BaseModel):
 
 class UserDetailedSchema(UserSchema):
     bio: str
+    recipe_count: int
+    like_count: int
 
 
 class UserLogin(BaseModel):

@@ -1,9 +1,9 @@
 from datetime import datetime
 from typing import TYPE_CHECKING, List
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, func, literal_column, select, text
 from app_factory import db
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, column_property
 from flask_login import UserMixin
 if TYPE_CHECKING:
     from app.backend.recipes.models import Like, Recipe, RecipeMix, RecipePublicationApplication
@@ -29,6 +29,21 @@ class User(db.Model, UserMixin):
     
     is_active: Mapped[bool] = mapped_column(default=True)
     is_superuser: Mapped[bool] = mapped_column(default=False, server_default='0')
+    
+    like_count = column_property(
+        select(func.count(literal_column("like.id")))
+        .select_from(text("like, recipe"))
+        .where(literal_column("recipe.author_id = user.id AND like.recipe_id = recipe.id"))
+        .scalar_subquery()
+    )
+    
+    recipe_count = column_property(
+        select(func.count(literal_column("recipe.id")))
+        .select_from(text("recipe"))
+        .where(literal_column("recipe.author_id") == id)
+        .scalar_subquery()
+    )
+
     
     @classmethod
     def active(cls):

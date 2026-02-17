@@ -90,6 +90,7 @@ class Recipe(db.Model):
     like_count = column_property(
         select(func.count(Like.id))
         .where(Like.recipe_id == id)
+        .correlate_except(Like)
         .scalar_subquery()
     )
 
