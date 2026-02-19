@@ -41,6 +41,8 @@ class User(db.Model, UserMixin):
         select(func.count(literal_column("recipe.id")))
         .select_from(text("recipe"))
         .where(literal_column("recipe.author_id") == id)
+        .where(literal_column("recipe.is_published") == True)
+        .where(literal_column("recipe.is_visible") == True)
         .scalar_subquery()
     )
 

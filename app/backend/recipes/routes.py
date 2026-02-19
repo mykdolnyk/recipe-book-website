@@ -70,6 +70,12 @@ def get_recipe_list():
     liked = request.args.get('liked')
     if liked and liked.lower() in ('true', '1'):
         query = query.filter(Recipe.likes.any(Like.user_id == current_user.id))
+        
+    # Filter by whether to include unpublished
+    published_only = request.args.get('published_only')
+    if published_only and published_only.lower() in ('true', '1'):
+        query = query.filter(Recipe.is_published == True)
+
 
     pagination = paginate(
         request_args=request.args,
