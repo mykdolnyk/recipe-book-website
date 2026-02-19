@@ -65,6 +65,11 @@ def get_recipe_list():
     author_id = request.args.get('author_id')
     if author_id:
         query = query.filter(Recipe.author_id == int(author_id))
+        
+    # Filter by current user's likes
+    liked = request.args.get('liked')
+    if liked and liked.lower() in ('true', '1'):
+        query = query.filter(Recipe.likes.any(Like.user_id == current_user.id))
 
     pagination = paginate(
         request_args=request.args,
