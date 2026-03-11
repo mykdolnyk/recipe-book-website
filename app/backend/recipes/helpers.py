@@ -1,11 +1,15 @@
+import datetime
 import random
 
 from app_factory import db
 from sqlalchemy import and_, case, desc, func, or_
 from sqlalchemy.orm import Query
-from backend.recipes.models import MealType, Recipe, RecipeMix, RecipeTag
+from backend.recipes.models import Like, MealType, Recipe, RecipeMix, RecipeTag
 from backend.users.models import User
 from backend.utils.name_generation import recipe_mix_names
+
+
+DAYS_7 = datetime.timedelta(days=7)
 
 
 def create_recipe_mix(include_tags: list[int] = None, exclude_tags: list[int] = None,
@@ -70,7 +74,7 @@ def create_recipe_mix(include_tags: list[int] = None, exclude_tags: list[int] = 
                            .order_by(Recipe.id)
                            .first()
                            )
-        
+
     if len(recipe_list) == 0:
         return None
 
@@ -156,3 +160,20 @@ def search_recipes(request_args) -> Query:
     # distinct() to prevent duplicates
 
     return query
+
+
+def get_popular_recipes_query(period: datetime.timedelta = DAYS_7, count: int = 10):
+    """This function creates a query that returns `count` number of Recipe objects
+    most liked in the recent `period` time period."""
+    earliest_date = datetime.datetime.now() - period
+
+    recipe_query = (
+        Recipe.visible()
+        .join(Like, Like.recipe_id == Recipe.id)
+        .filter(Like.created_on >= earliest_date)
+        .group_by(Recipe.id)
+        .order_by(func.count(Like.id).desc())
+        .limit(count)
+    )
+
+    return recipe_query

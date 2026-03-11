@@ -3,7 +3,7 @@ from flask.blueprints import Blueprint
 from flask import abort, jsonify, request
 from flask_login import current_user, login_required
 from pydantic import ValidationError
-from backend.recipes.helpers import create_recipe_mix, search_recipes
+from backend.recipes.helpers import create_recipe_mix, search_recipes, get_popular_recipes_query
 from backend.utils.misc import ObjectManager, safe_commit
 from backend.utils.errors import ErrorCode, create_error_response
 from backend.utils.login import is_owner_or_superuser, superuser_only
@@ -65,17 +65,16 @@ def get_recipe_list():
     author_id = request.args.get('author_id')
     if author_id:
         query = query.filter(Recipe.author_id == int(author_id))
-        
+
     # Filter by current user's likes
     liked = request.args.get('liked')
     if liked and liked.lower() in ('true', '1'):
         query = query.filter(Recipe.likes.any(Like.user_id == current_user.id))
-        
+
     # Filter by whether to include unpublished
     published_only = request.args.get('published_only')
     if published_only and published_only.lower() in ('true', '1'):
         query = query.filter(Recipe.is_published == True)
-
 
     pagination = paginate(
         request_args=request.args,
@@ -549,3 +548,12 @@ def unlike_recipe(id: int):
     db.session.commit()
 
     return '', 204
+
+
+@recipes_bp.route('/recipes/popular', methods=['GET'])
+def get_popular_recipes():
+    # we are cacheing this one 🔥🔥🔥
+    popular_recipes = get_popular_recipes_query().all()
+    recipe_list = [RecipeSchema.model_validate(obj).model_dump()
+                   for obj in popular_recipes]
+    return jsonify(recipe_list)
