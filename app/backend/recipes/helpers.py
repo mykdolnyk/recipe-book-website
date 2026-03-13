@@ -168,7 +168,7 @@ def get_popular_recipes_query(period: datetime.timedelta = DAYS_7, count: int = 
     earliest_date = datetime.datetime.now() - period
 
     recipe_query = (
-        Recipe.visible()
+        Recipe.published()
         .join(Like, Like.recipe_id == Recipe.id)
         .filter(Like.created_on >= earliest_date)
         .group_by(Recipe.id)

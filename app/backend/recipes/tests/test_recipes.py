@@ -347,3 +347,42 @@ def test_recipe_search(client: FlaskClient, app, testing_setup):
         f'/api/recipes/search?text=fancy&recipe-tags={tag.id}&meal-types={meal_type.id}')
     assert response.status_code == 200
     assert response.get_json()["total"] == 2
+
+
+def test_popular_recipes(client: FlaskClient, app, testing_setup):
+    # Clean setup with no likes
+    response = client.get('/api/recipes/popular')
+    assert response.status_code == 200
+    assert len(response.get_json()) == 0
+    
+    # Like some recipes
+    
+    with app.test_request_context():
+        login_user(testing_setup['users']['active'][0])
+    
+    liked_recipes = set()
+    for i in range(0, len(testing_setup['recipes']['published']), 3):
+        recipe = testing_setup['recipes']['published'][i]
+        liked_recipes.add(recipe)
+
+        response = client.post(f'/api/recipes/{recipe.id}/like')
+        assert response.status_code == 201
+    
+    # Check again
+    response = client.get('/api/recipes/popular')
+    assert response.status_code == 200
+    assert len(response.get_json()) == len(liked_recipes)
+    
+    # Like more 
+    for i in range(1, len(testing_setup['recipes']['published']), 3):
+        recipe = testing_setup['recipes']['published'][i]
+        liked_recipes.add(recipe)
+
+        response = client.post(f'/api/recipes/{recipe.id}/like')
+        assert response.status_code == 201
+    
+    # Check again
+    response = client.get('/api/recipes/popular')
+    assert response.status_code == 200
+    assert len(response.get_json()) == len(liked_recipes)
+    
