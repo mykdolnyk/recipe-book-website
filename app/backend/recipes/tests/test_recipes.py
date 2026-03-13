@@ -21,7 +21,7 @@ def test_create_recipe(client: FlaskClient, app, testing_setup):
 
     # non-logged in request
     response = client.post('/api/recipes', json=data)
-    assert response.status_code == 401
+    assert response.status_code == 302
 
     # logged in request
     with app.test_request_context():
@@ -189,7 +189,7 @@ def test_delete_recipe(client: FlaskClient, app, testing_setup):
     # non-logged in:
     response = client.delete(f'/api/recipes/{recipe.id}')
     assert response.status_code == 401
-
+    
     # wrong user:
     user = testing_setup['users']['active'][1]
     assert user.id != recipe.author_id

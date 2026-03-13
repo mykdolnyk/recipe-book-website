@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="{{ url_for("static", filename="media/general/favicon.svg" ) }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for("static", filename="css/styles.css" ) }}">
+    <title>DishMixer - Dish Your Mixes..?</title>
+    {% block js %}{% endblock js %}
+</head>
+
+
+<body>
+    {% include '_components/header.html' %}
+    {# `main_classes` block represents the classes that the `main` element should have #} 
+    <main class="{% block main_classes %}narrow-main-bg{% endblock main_classes %}">
+        {% block main_body %}{% endblock main_body %}
+    </main>
+</body>
+
+</html>

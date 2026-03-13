@@ -1,0 +1,59 @@
+{% extends "_components/base.html" %}
+
+{% block js %}
+    {{ super() }}
+    <script>
+        const recipeId = {{ context.recipe.id }}
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js" defer></script>
+    <script src="{{ url_for("static", filename="js/recipes/load_recipe.js" ) }}" defer></script>
+    <script src="{{ url_for("static", filename="js/recipes/like_recipe.js" ) }}" defer></script>
+{% endblock js %}
+
+{% block main_body %}
+
+<div class="inline-spread">
+    <h1 id='recipe-name'></h1>
+    {% if current_user.id == context.recipe.author.id %}
+    <a href="{{ url_for("recipes_frontend.recipe_edit_page", slug=context.recipe.slug) }}" class="button">Edit</a>
+    {% elif current_user.is_superuser %}
+    <a href="{{ url_for("recipes_frontend.recipe_edit_page", slug=context.recipe.slug) }}" class="button admin-button">Admin Edit</a>
+    {% endif %}
+</div>
+{% if not context.recipe.is_visible %}
+    <h2 class="text-red">Delisted. Visible to Superusers only.</h2>
+{% endif %}
+<div class="block">
+    <div class="description-box-info-row">
+        <span id='meal-type'></span>
+        <span>Calories: <span class="text-red" id="calories"></span> kcal</span>
+        <span>Time to Cook: <span class="text-red" id="cooking-time"></span> mins</span>
+    </div>
+    <div class="tag-list" id="tag-list">
+    </div>
+    <p id="description"></p>
+</div>
+<h2>Ingredients</h2>
+<p id="ingredients"></p>
+<hr>
+<h2>Let's Start Cooking!</h2>
+<p id="recipe-text"></p>
+
+<div class="inline-spread">
+    <div class="block author-card">
+        <img alt="Profile Picture" id="author-pfp">
+        <div class="text">
+            <span>Recipe submitted by <a id="author-link"></a></span>
+            <p id="author-bio"></p>
+        </div>
+    </div>
+    
+    <div class="block like-box">
+        <span><span class="text-red" id="like-count"></span> Likes</span>
+        {% if current_user.is_authenticated %}
+        <button id='like-button' class="button">Like</button>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock main_body %}

@@ -1,0 +1,40 @@
+{% extends "_components/base.html" %}
+
+{% block js %}
+    {{ super() }}
+    <script>
+        let userId = {{ request.view_args['id'] }};
+        let customQueryParams = {'author_id': {{ request.view_args['id'] }}, "published_only": "true" };
+    </script>
+    <script src="{{ url_for("static", filename="js/recipes/load_recipe_cards.js" ) }}" defer></script>
+    <script src="{{ url_for("static", filename="js/user_profile/load_user_profile.js" ) }}" defer></script>
+{% endblock js %}
+
+{% block main_body %}
+
+<div class="block profile-block">
+    <img id='pfp'>
+    <div>
+        <h1 class='user-name'></h1>
+        <p id='bio'></p>
+        <div class="inline-spread">
+            <span><span id="recipe-count"></span> Recipes Published</span>
+            <span><span id="like-count"></span> Likes in Total</span>
+        </div>
+        {% if request.view_args['id'] == current_user.id %}
+            <a href="{{ url_for("users_frontend.user_profile_edit_page", id=current_user.id) }}" class="button profile-edit-button">Edit</a>
+        {% endif %}
+    </div>
+</div>
+<hr>
+
+<h2><span class="user-name">Username</span> Published These Recipes:</h2>
+<div class="card-container">
+    <button class="button" id='more-button'>More</button>
+</div>
+
+<template id="recipe-card-template">
+    {% include "_components/recipe_card.html" %}
+</template>
+{% endblock main_body %}
+

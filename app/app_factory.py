@@ -1,4 +1,5 @@
 from backend.utils.anon_user import AnonymousUser
+from backend.utils.login import authorization_context_processors, redirect_to_login_callback
 import config
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -17,9 +18,11 @@ password_policy = PasswordPolicy.from_names(**config.PASSWORD_POLICY)
 def create_app(config_object=config, overrides=None):
     logging_config(config.LOGGING)
 
+    # Flask Init
     app = Flask(
         __name__,
-        static_url_path=config.STATIC_URL_PATH.as_posix()
+        static_url_path=config.STATIC_URL_PATH.as_posix(),
+        template_folder="frontend/templates"
     )
     app.config.from_object(config_object)
     if overrides:
@@ -29,6 +32,7 @@ def create_app(config_object=config, overrides=None):
     migrate.init_app(app=app, db=db)
     login_manager.init_app(app=app)
 
+    # Models
     from backend.users.models import User
     from backend.recipes.models import (
         Recipe,
@@ -41,20 +45,35 @@ def create_app(config_object=config, overrides=None):
         recipe_tag_association,
     )
 
+    # Login 
     @login_manager.user_loader
     def user_loader(user_id: str):
         return User.query.get(int(user_id))
     login_manager.anonymous_user = AnonymousUser
+    login_manager.unauthorized_handler(redirect_to_login_callback)    
 
-    from backend.users.routes import user_bp
-    from backend.recipes.routes import recipes_bp
+    # CLI
     import backend.recipes.cli
     import backend.users.cli
     
     from backend.utils.cli import load_fixtures_command
 
     app.cli.add_command(load_fixtures_command)
+    
+    # Blueprints
+    from backend.users.routes import user_bp
+    from backend.recipes.routes import recipes_bp
+    
+    from frontend.recipes.routes import recipes_front_bp
+    from frontend.users.routes import users_front_bp
+    
     app.register_blueprint(user_bp)
     app.register_blueprint(recipes_bp)
+    
+    app.register_blueprint(recipes_front_bp)
+    app.register_blueprint(users_front_bp)
+    
+    # Context Processors
+    app.context_processor(authorization_context_processors)
 
     return app

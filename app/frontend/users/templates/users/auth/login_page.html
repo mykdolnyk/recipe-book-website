@@ -1,0 +1,29 @@
+{% extends "_components/base.html" %}
+
+{% block js %}
+    <script src="{{ url_for("static", filename="js/auth/login.js" ) }}" defer></script>
+{% endblock js %}
+
+{% block main_classes %}auth-block{% endblock main_classes %}
+
+{% block main_body %}
+
+<h1>Sign In</h1>
+
+<form>
+    <div>
+        <span>Email Address:</span>
+        <input type="text" name="username" id="email" placeholder="john@example.com" autocomplete="email">
+    </div>
+    <div>
+        <span>Password:</span>
+        <input type="password" name="username" id="password" placeholder="Your Password" autocomplete="current-password">
+    </div>
+    
+    {% include '_components/error_list.html' %}
+    
+    <button type="button">Sign In</button>
+</form>
+
+
+{% endblock main_body %}

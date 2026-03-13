@@ -1,0 +1,18 @@
+{% extends "_components/base.html" %}
+
+{% block js %}
+    {{ super() }}
+    <script src="{{ url_for("static", filename="js/recipes/search_bar.js" ) }}" defer></script>
+    <script src="{{ url_for("static", filename="js/recipes/index_page.js" ) }}" defer></script>
+{% endblock js %}
+
+{% block main_body %}
+{% include "_components/search_bar.html" %}
+<h2>Popular Now</h2>
+<div class="card-container">
+</div>
+
+<template id="recipe-card-template">
+    {% include "_components/recipe_card.html" %}
+</template>
+{% endblock main_body %}

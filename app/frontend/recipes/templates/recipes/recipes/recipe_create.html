@@ -1,0 +1,61 @@
+{% extends "_components/base.html" %}
+
+{% block js %}
+    {{ super() }}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css" defer>
+    <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js" defer></script>
+    <script src="{{ url_for("static", filename="js/recipes/create_recipe.js" ) }}" defer></script>
+{% endblock js %}
+
+{% block main_body %}
+
+<h1>Create New Recipe</h1>
+
+<hr>
+<h2>Meal Information</h2>
+<div>
+    <h3>Recipe Name</h3>
+    <input type="text" name="recipe_name" id="recipe-name" placeholder="Recipe Name" class='full-width'>
+</div>
+<div class="inline">
+    <div class="field-block">
+        <h3>Cooking Time</h3>
+        <input type="number" name="cooking_time" id="cooking-time" placeholder="In Minutes">
+    </div>
+    <div class="field-block">
+        <h3>Calories</h3>
+        <input type="number" name="calories" id="calories" placeholder="In kCal">
+    </div>
+    <div class="field-block">
+        <h3>Meal Type</h3>
+        <select name="meal_type" id="meal-type" size="1">
+            {% for meal_type in context.meal_types %}
+            <option value="{{ meal_type.id }}"> {{ meal_type.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="field-block">
+        <h3>Tags</h3>
+        <select name="tags" id="tag-list" size="1" multiple>
+            {% for tag in context.tags %}
+            <option value="{{ tag.id }}"> {{ tag.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+<hr>
+<h2>Description</h2>
+<textarea name="description" id="description" placeholder="Recipe Description"></textarea>
+<h2>Ingredients</h2>
+<textarea name="ingredients" id="ingredients" placeholder="Recipe Ingredients"></textarea>
+<h2>The Recipe</h2>
+<textarea name="text" id="recipe-text" placeholder="Your Recipe Comes Here"></textarea>
+
+{% include '_components/error_list.html' %}
+
+<div class="small-vertical-margin put-in-center">
+    <button class="button" id="send-button">Done</button>
+</div>
+
+{% endblock main_body %}

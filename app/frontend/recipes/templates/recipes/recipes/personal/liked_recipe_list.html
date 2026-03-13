@@ -1,0 +1,25 @@
+{% extends "_components/base.html" %}
+
+{% block js %}
+    {{ super() }}
+    <script>
+        let customQueryParams = {'liked': "true" }
+    </script>
+    <script src="{{ url_for("static", filename="js/recipes/load_recipe_cards.js" ) }}" defer></script>
+{% endblock js %}
+
+{% block main_body %}
+<h1>Liked Recipes</h1>
+<p class='text-title'>List of the recipes you liked, saved for later.</p>
+<hr>
+<div class="card-container">
+</div>
+
+<div class="put-in-center small-vertical-margin">
+    <button id="more-button">More</button>
+</div>
+
+<template id="recipe-card-template">
+    {% include "_components/recipe_card.html" %}
+</template>
+{% endblock main_body %}

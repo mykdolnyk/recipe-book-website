@@ -1,0 +1,36 @@
+{% extends "_components/base.html" %}
+
+{% block js %}
+    {{ super() }}
+    <script>
+        const mixId = {{ context.mix_id }}
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js" defer></script>
+    <script src="{{ url_for("static", filename="js/mixes/load_mix.js" ) }}" defer></script>
+{% endblock js %}
+
+{% block main_body %}
+<div class="inline-spread">
+    <h1 id="mix-name"></h1>
+    <a href="{{ url_for('recipes_frontend.mix_creation_page') }}" class="button">Create Mix</a>
+</div>
+<p class="text-title">Here is your yummy mix!</p>
+<hr>
+<div>
+</div>
+
+<template id='recipe-card-template'>
+    <div>
+        <h2 class="meal-type"></h2>
+        <div class="block">
+            <h3><a class='recipe-name'></a></h3>
+            <p class='description'></p>
+            <div class="card-info-row inline-spread">
+                <span><span class="calories">110</span> kcal</span>
+                <span><span class="minutes">60</span> mins</span>
+            </div>
+        </div>
+    </div>
+</template>
+
+{% endblock main_body %}

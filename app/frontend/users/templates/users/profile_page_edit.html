@@ -1,0 +1,37 @@
+{% extends "_components/base.html" %}
+
+{% block js %}
+    {{ super() }}
+    <script>
+        let userId = {{ request.view_args['id'] }};
+    </script>
+    <script src="{{ url_for("static", filename="js/user_profile/edit_user_profile.js" ) }}" defer></script>
+{% endblock js %}
+
+{% block main_body %}
+<h1>Edit Your Profile</h1>
+<p class="text-title">Personalize your profile!</p>
+<hr>
+
+<div class="inline-spread">
+    <div class="field-block">
+        <h3>Name</h3>
+        <input type="text" name="name" id="name" placeholder="Your Name" value="{{current_user.name}}">
+    </div>
+    <div class="inline">
+        <div class="field-block">
+            <h3>Profile Picture</h3>
+            <select name="profile_picture" id="pfp" size="1">
+                {% for pfp in context.pfp_list %}
+                <option value="{{ pfp.id }}" data-link="/static/{{ pfp.file_path }}" {% if pfp.id == current_user.profile_picture_id %}selected{% endif %}>Picture {{ pfp.id }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <img alt="Profile Picture Preview" class="pfp-choice-img">
+    </div>
+</div>
+<h3>Bio</h3>
+<textarea name="bio" id="bio" placeholder="Your Bio">{{current_user.bio}}</textarea>
+<div class="put-in-center small-vertical-margin"><button>Done</button></div>
+{% endblock main_body %}
+

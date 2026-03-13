@@ -1,0 +1,94 @@
+{% extends "_components/base.html" %}
+
+{% block js %}
+    <script src="{{ url_for("static", filename="js/mixes/create_mix.js" ) }}" defer></script>
+{% endblock js %}
+
+{% block main_body %}
+<h1>Give Your Diet a Mix</h1>
+<p class="text-title">Create a new Mix here! Specify what you want to see in your mix and click "Mix!"</p>
+<hr>
+<div class="mix-creation-body">
+    <div class="mix-creation-inclusion-row">
+        <div>
+            <h3 class="no-margin">Meal Types</h3>
+            <div class="mix-creation-inclusion-column">
+                <div class="titled-input">
+                    <span>Meal Types</span>
+                    <select name="meal-types" id="meal-types-select" size="1" multiple>
+                        {% for meal_type in context.meal_types %}
+                        <option value="{{ meal_type.id }}"> {{ meal_type.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <h3 class="no-margin">Tags</h3>
+            <div class="mix-creation-inclusion-column">
+                <div class="titled-input">
+                    <span>Mode</span>
+                    <div>
+                        <select name="tags-mode" id="tags-mode" size="1">
+                            <option value="include" selected>Include</option>
+                            <option value="exclude">Exclude</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="titled-input">
+                    <span>Tags</span>
+                    <select name="tags" id="tags-select" size="1" multiple>
+                        {% for tag in context.tags %}
+                        <option value="{{ tag.id }}"> {{ tag.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    <hr>
+    <div class="mix-creation-comparison-block">
+        <h3 class="no-margin">Calories</h3>
+        <div class="mix-creation-comparison-row">
+            <input type="text" name="min-calories" id="min-calories" placeholder="Min">
+            <span>≤</span>
+            <input disabled placeholder="Calories">
+            <span>≤</span>
+            <input type="number" name="max-calories" id="max-calories" placeholder="Max">
+        </div>
+    </div>
+    <hr>
+    <div class="mix-creation-comparison-block">
+        <h3 class="no-margin">Cooking Time</h3>
+        <div class="mix-creation-comparison-row">
+            <input type="text" name="min-cooking-time" id="min-cooking-time" placeholder="Min">
+            <span>≤</span>
+            <input disabled placeholder="Time">
+            <span>≤</span>
+            <input type="number" name="max-cooking-time" id="max-cooking-time" placeholder="Max">
+        </div>
+    </div>
+    <hr>
+
+    <div class="mix-creation-inclusion-row">
+        <div>
+            <h3 class="no-margin">Publication Status</h3>
+            <div class="titled-input">
+                <span>Publication Status</span>
+                <div>
+                    <select name="publication-status" id="publication-status" size="1">
+                        <option value="both" selected>All Recipes</option>
+                        <option value="public">Public Only</option>
+                        <option value="personal">Personal Only</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include '_components/error_list.html' %}
+
+
+    <button class="button" id="send-button">Mix!</button>
+</div>
+{% endblock main_body %}

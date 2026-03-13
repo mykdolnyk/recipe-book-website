@@ -1,0 +1,21 @@
+<header>
+    <nav>
+        <div class="left-side">
+            <a class="logo" href="{{ url_for("recipes_frontend.index_page")}}">DishMixer</a>
+            <a href="{{ url_for("recipes_frontend.mix_creation_page") }}">Mix Now</a>
+        </div>
+        <div class="right-side">
+            {% if current_user.is_anonymous %}
+                <a href="{{ url_for("users_frontend.login_page")}}" class='button'>Sign In</a>
+                <a href="{{ url_for("users_frontend.signup_page")}}" class='button'>Create an Account</a>
+            {% else %}            
+                <a href="{{ url_for("recipes_frontend.mix_list_page")}}">My Mixes</a>
+                <a href="{{ url_for("recipes_frontend.personal_recipe_list_page")}}">My Recipes</a>
+                <a href="{{ url_for("recipes_frontend.favorites_page")}}">My Favs</a>
+                <hr width="1" class="vertical-line">
+                <a href="{{ url_for("users_frontend.user_profile_page", id=current_user.id )}}">Hi, <b>{{current_user.name}}</b></a>
+                <a href="{{ url_for("users_frontend.logout_page")}}" class='button'>Log Out</a>
+            {% endif %}
+        </div>
+    </nav>
+</header>

@@ -1,0 +1,81 @@
+{% extends "_components/base.html" %}
+
+{% block js %}
+    {{ super() }}
+    <script>
+        const recipeId = {{ context.recipe.id }}
+        const recipeSlug = "{{ context.recipe.slug }}"
+    </script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css" defer>
+    <script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js" defer></script>
+    <script src="{{ url_for("static", filename="js/recipes/edit_recipe.js" ) }}" defer></script>
+{% endblock js %}
+
+{% block main_body %}
+
+<h1>Edit Your Recipe</h1>
+{% if not context.recipe.is_visible %}
+    <h2 class="text-red">Delisted. Visible to Superusers only.</h2>
+{% endif %}
+<hr>
+<h2>Meal Information</h2>
+<div>
+    <h3>Recipe Name</h3>
+    <input type="text" name="recipe_name" id="recipe-name" placeholder="Recipe Name" class='full-width' value="{{ context.recipe.name }}">
+</div>
+<div class="inline">
+    <div class="field-block">
+        <h3>Cooking Time</h3>
+        <input type="number" name="cooking_time" id="cooking-time" placeholder="In Minutes" value={{ context.recipe.cooking_time }}>
+    </div>
+    <div class="field-block">
+        <h3>Calories</h3>
+        <input type="number" name="calories" id="calories" placeholder="In kCal" value={{ context.recipe.calories }}>
+    </div>
+    <div class="field-block">
+        <h3>Meal Type</h3>
+        <select name="meal_type" id="meal-type" size="1">
+            {% for meal_type in context.meal_types %}
+            <option value="{{ meal_type.id }}" {% if meal_type.id == context.recipe.meal_type_id %}selected{% endif %}> {{ meal_type.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="field-block">
+        <h3>Tags</h3>
+        <select name="tags" id="tag-list" size="1" multiple>
+            {% for tag in context.tags %}
+            <option value="{{ tag.id }}" {% if tag in context.recipe.tags %}selected{% endif %}> {{ tag.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+<hr>
+<h2>Description</h2>
+<textarea name="description" id="description" placeholder="Recipe Description">{{ context.recipe.description }}</textarea>
+<h2>Ingredients</h2>
+<textarea name="ingredients" id="ingredients" placeholder="Recipe Ingredients">{{ context.recipe.ingredients }}</textarea>
+<h2>The Recipe</h2>
+<textarea name="text" id="recipe-text" placeholder="Your Recipe Comes Here">{{ context.recipe.text }}</textarea>
+
+{% include '_components/error_list.html' %}
+
+<div class="small-vertical-margin inline-spread">
+    <button class="button" id="send-button">Done</button>
+    <div>
+        {% if not context.recipe.is_published %}
+            <button class="button" id="publish-button">Publish</button>
+        {% endif %}
+        <button class="button danger-button" id="delete-button">Delete</button>
+    </div>
+</div>
+
+<div id='publication-application-block' class="hidden-block">
+    <hr>
+    <h2>Publish Recipe</h2>
+    <p>Fill in the application and send it to us for us to review and publish it!</p>
+    <textarea name="text" id="application-text" placeholder="Here goes your application."></textarea>
+    <button class="button" id="send-application-button">Confirm Publishing</button>
+</div>
+
+{% endblock main_body %}

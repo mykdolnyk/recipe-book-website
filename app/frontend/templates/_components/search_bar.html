@@ -1,0 +1,33 @@
+<form action="{{ url_for("recipes_frontend.search_page") }}" id="search-bar">
+    <div class="inline-spread">
+        <h2 class="no-margin">Search for Anything!</h2>
+        <div>
+            <span class='text-title'>...or</span>
+            <a href="{{ url_for("recipes_frontend.mix_creation_page") }}" class="button">Create Mix</a>
+        </div>
+    </div>
+    <div class="searchbar">
+        <input type="search" name="text" id="" placeholder="What would you like to eat?">
+        <input class='button' type='submit' value='Go'>
+    </div>
+    <div class="button-bar">
+        <span>Specify:</span>
+        <div class="titled-input">
+            <span>Meal Types</span>
+            <select name="meal_types" id="meal-types-select" size="1" multiple></select>
+        </div>
+        <div class="titled-input">
+            <span>Tags</span>
+            <select name="tags" id="tags-select" size="1" multiple></select>
+        </div>
+        <div class="titled-input">
+            <span>Calories</span>
+            <input type="text" name="calories" id="calories-input" size="7" placeholder="Max">
+        </div>
+        <div class="titled-input">
+            <span>Cooking Time</span>
+            <input type="text" name="minutes" id="minutes-input" size="8" placeholder="In Mins">
+        </div>
+    </div>
+</form>
+<hr>

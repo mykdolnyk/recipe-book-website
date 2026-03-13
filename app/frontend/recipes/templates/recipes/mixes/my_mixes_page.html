@@ -1,0 +1,32 @@
+{% extends "_components/base.html" %}
+
+{% block js %}
+    {{ super() }}
+    <script>
+        let customQueryParams = {'author_id': {{ current_user.id }} }
+    </script>
+    <script src="{{ url_for("static", filename="js/mixes/load_mix_cards.js" ) }}" defer></script>
+{% endblock js %}
+
+{% block main_body %}
+<div class="inline-spread">
+    <h1>My Mixes</h1>
+    <a href="{{ url_for('recipes_frontend.mix_creation_page') }}" class="button">Create Mix</a>
+</div>
+<p class="text-title">View your previously created mixes here!</p>
+<hr>
+<div class="mix-list-grid">
+</div>
+
+<div class="put-in-center small-vertical-margin">
+    <button id="more-button">More</button>
+</div>
+
+<template id="mix-card-template">
+    {% include "_components/mix_card.html" %}
+</template>
+<template id="mix-card-recipe-name-template">
+    <li><a class='recipe-name'></a></li>
+</template>
+
+{% endblock main_body %}

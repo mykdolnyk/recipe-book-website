@@ -1,0 +1,21 @@
+{% extends "_components/base.html" %}
+
+{% block js %}
+    <script src="{{ url_for("static", filename="js/auth/logout.js" ) }}" defer></script>
+{% endblock js %}
+
+{% block main_classes %}auth-block{% endblock main_classes %}
+
+{% block main_body %}
+
+<h1>Log Out?</h1>
+
+<span>Are you sure you want to Log Out?</span>
+<form>
+    <div class="logout-buttons">
+        <button class="button" type="button">Yes</button>
+        <a href="{{ url_for('recipes_frontend.index_page')}}" class="button">No</a>
+    </div>
+</form>
+
+{% endblock main_body %}
