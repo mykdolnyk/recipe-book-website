@@ -4,7 +4,7 @@ import flask_login
 from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
 from backend.recipes.models import MealType, Recipe, RecipeTag
 from backend.utils.misc import generate_unique_slug, slugify
-from backend.users.schemas import UserSchema
+from backend.users.schemas import UserDetailedSchema, UserSchema
 
 
 class MealTypeCreate(BaseModel):
@@ -125,7 +125,7 @@ class RecipeSchema(BaseModel):
     text: str
 
     meal_type: MealTypeSchema | None
-    author: UserSchema | None
+    author: UserDetailedSchema | None
     tags: list[RecipeTagSchema]
     slug: str
     is_published: bool

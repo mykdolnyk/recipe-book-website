@@ -36,7 +36,7 @@ def runner(app) -> CliRunner:
     return app.test_cli_runner()
 
 
-TEST_PASSWORD = 'r3p[avn!f;1cFGKDS'
+TEST_PASSWORD = 'r3pavn!f;1cFGKDS'
 
 
 @pytest.fixture
