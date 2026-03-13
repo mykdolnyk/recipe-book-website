@@ -19,6 +19,8 @@ PASSWORD_POLICY = {
     'strength': 0.66,
 }
 
+LOG_DIR = Path('/var/log/web')
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -42,7 +44,7 @@ LOGGING = {
             'level': 'ERROR',
             'formatter': 'verbose',
             'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'error.log'
+            'filename': LOG_DIR / 'error.log'
         }
     },
 
