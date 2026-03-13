@@ -180,7 +180,7 @@ def test_get_recipe_list(client: FlaskClient, app, testing_setup):
 
     response = client.get('/api/recipes')
     assert response.status_code == 200
-    assert response.get_json()["total"] == Recipe.query.count()
+    assert response.get_json()["total"] == Recipe.published().count()
 
 
 def test_delete_recipe(client: FlaskClient, app, testing_setup):

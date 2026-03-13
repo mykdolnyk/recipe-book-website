@@ -139,7 +139,7 @@ class Recipe(db.Model):
             query = query.filter(
                 or_(
                     cls.is_published == True,
-                    cls.author_id == current_user.id
+                    cls.author_id == user.id
                 )
             )
 

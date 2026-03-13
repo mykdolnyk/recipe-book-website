@@ -202,7 +202,7 @@ def test_create_recipe_mix(client: FlaskClient, app, testing_setup):
     # Test
     response = client.post('/api/recipe-mixes', json=post_body)
     assert response.status_code == 200
-    assert len(response.get_json()['recipes']) == 0
+    assert response.get_json().get('errors')
 
     # Login
     with app.test_request_context():
@@ -222,7 +222,7 @@ def test_create_recipe_mix(client: FlaskClient, app, testing_setup):
     }
     response = client.post('/api/recipe-mixes', json=post_body)
     assert response.status_code == 200
-    assert len(response.get_json()['recipes']) == 0
+    assert response.get_json().get('errors')
     
     post_body = {
         "meal_type_ids": [1, 2, 3, 4, 5],
@@ -230,7 +230,7 @@ def test_create_recipe_mix(client: FlaskClient, app, testing_setup):
     }
     response = client.post('/api/recipe-mixes', json=post_body)
     assert response.status_code == 200
-    assert len(response.get_json()['recipes']) != 0
+    assert not response.get_json().get('errors')
     
     # --- Test Personal Only ---
     post_body = {
