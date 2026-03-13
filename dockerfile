@@ -9,7 +9,7 @@ RUN apt install -y dos2unix
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY ./app .
 
 COPY scripts/app/entrypoint.sh /entrypoint.sh
 RUN dos2unix /entrypoint.sh

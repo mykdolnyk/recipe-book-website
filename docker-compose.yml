@@ -1,0 +1,20 @@
+services:
+  web:
+    build: .
+    env_file:
+      - test.env
+    volumes:
+      - log_files:/var/log/
+    expose:
+      - 5000
+    command: python -m gunicorn run:app --workers=3 --bind 0.0.0.0:5000
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - log_files:/var/log/nginx
+    ports:
+      - "80:80"
+
+volumes:
+  log_files:
