@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 SECRET_KEY = 'not-so-secret-key'
@@ -5,6 +6,13 @@ SECRET_KEY = 'not-so-secret-key'
 BASE_DIR = Path(__file__).resolve().parent
 
 SQLALCHEMY_DATABASE_URI = "sqlite:///dev.db"
+
+REDIS_URL = os.getenv('REDIS_URL')
+CELERY_CONFIG = {
+    "broker_url": REDIS_URL,
+    "result_backend": REDIS_URL,
+    "task_ignore_result": True,
+}
 
 STATIC_URL_PATH = Path('/static')
 

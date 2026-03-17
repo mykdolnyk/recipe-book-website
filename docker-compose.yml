@@ -19,6 +19,26 @@ services:
       - staticfiles:/app/staticfiles/
     ports:
       - "80:80"
+  redis:
+    image: redis:latest
+    expose:
+      - 6379
+  celery-worker:
+    build: .
+    env_file:
+      - test.env
+    volumes:
+      - log_files:/var/log/
+    entrypoint: ""
+    command: celery -A make_celery worker -l info
+  celery-beat:
+    build: .
+    env_file:
+      - test.env
+    volumes:
+      - log_files:/var/log/
+    entrypoint: ""
+    command: celery -A make_celery beat -l info
 
 volumes:
   log_files:
