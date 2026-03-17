@@ -1,3 +1,4 @@
+import json
 from logging import getLogger
 from flask.blueprints import Blueprint
 from flask import abort, jsonify, request
@@ -15,6 +16,7 @@ from backend.recipes.schemas import RecipePublicationApplicationSchema as Recipe
 from backend.recipes.schemas import RecipePublicationApplicationUpdate as RecipeAppUpdate
 from backend.recipes.schemas import MealTypeSchema, RecipeCreate, RecipeUpdate, RecipeSchema, RecipeTagCreate, RecipeTagSchema, RecipeTagUpdate
 from app_factory import db
+from app_factory import redis_client
 logger = getLogger(__name__)
 
 
@@ -552,8 +554,9 @@ def unlike_recipe(id: int):
 
 @recipes_bp.route('/recipes/popular', methods=['GET'])
 def get_popular_recipes():
-    # we are cacheing this one 🔥🔥🔥
-    popular_recipes = get_popular_recipes_query().all()
-    recipe_list = [RecipeSchema.model_validate(obj).model_dump()
-                   for obj in popular_recipes]
+    # todo: cache?
+    recipe_id_list = json.loads(redis_client.get('popular_recipes'))
+    
+    popular_recipes = Recipe.ua_query().filter(Recipe.id.in_(recipe_id_list))
+    recipe_list = [RecipeSchema.model_validate(obj).model_dump() for obj in popular_recipes]
     return jsonify(recipe_list)
