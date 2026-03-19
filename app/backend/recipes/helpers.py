@@ -1,7 +1,8 @@
 import datetime
+import pickle
 import random
 
-from app_factory import db
+from app_factory import db, redis_client
 from sqlalchemy import and_, case, desc, func, or_
 from sqlalchemy.orm import Query
 from backend.recipes.models import Like, MealType, Recipe, RecipeMix, RecipeTag
@@ -177,3 +178,24 @@ def get_popular_recipes_query(period: datetime.timedelta = DAYS_7, count: int = 
     )
 
     return recipe_query
+
+
+def get_recipe_related_objects_cached() -> dict[MealType, RecipeTag]:
+    """A helper function that retrieves recipe-related data such as `MealType`
+    and `RecipeTag` objects from cache, or calculates them and caches afterward
+    if they do not exist."""
+    cache_key = 'recipe-related-objects'
+    
+    cache = redis_client.get(cache_key)
+    if cache is None:
+        context = {
+            "meal_types": MealType.query.all(),
+            "tags": RecipeTag.query.all(),
+        }
+        
+        pickled = pickle.dumps(context)
+        redis_client.set(cache_key, pickled, 3600)
+    else:
+        context = pickle.loads(cache)
+        
+    return context

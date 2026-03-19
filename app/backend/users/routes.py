@@ -1,3 +1,4 @@
+import json
 import random
 from flask_login import current_user, login_user, logout_user
 from logging import getLogger
@@ -10,7 +11,7 @@ from backend.users.schemas import UserCreate, UserDetailedSchema, UserUpdate, Us
 from backend.users.models import ProfilePicture, User
 from backend.utils.errors import create_error_response, ErrorCode
 from flask import abort, jsonify, request
-from app_factory import db
+from app_factory import db, redis_client
 
 
 logger = getLogger(__name__)
@@ -66,11 +67,18 @@ def register_user():
 @user_bp.route('/users/<int:id>', methods=["GET"])
 def get_user_info(id: int):
     user = User.active().filter_by(id=id).first()
-
     if not user:
         return create_error_response(ErrorCode.USER_NOT_FOUND)
-    # todo: Cache me!
-    response = UserDetailedSchema.model_validate(user).model_dump()
+    
+    cache_key = f'user-data:id={user.id}'
+    response = redis_client.get(cache_key)
+    
+    if response is not None:
+        response = json.loads(response)
+    else:
+        response = UserDetailedSchema.model_validate(user).model_dump()
+        redis_client.set(cache_key, json.dumps(response), 600)
+        
     return jsonify(response)
 
 

@@ -1,6 +1,7 @@
 from flask import Blueprint, abort, render_template
 from flask_login import login_required
 
+from backend.recipes.helpers import get_recipe_related_objects_cached
 from backend.recipes.models import MealType, Recipe, RecipeTag
 from backend.utils.login import is_owner_or_superuser
 
@@ -23,11 +24,7 @@ def search_page():
     
 @recipes_front_bp.route('/mix', methods=['GET'])
 def mix_creation_page():
-    context = {
-        # todo: cache
-        "meal_types": MealType.query.all(),
-        "tags": RecipeTag.query.all(),
-    }
+    context = get_recipe_related_objects_cached()
     return render_template('recipes/mixes/mix_creation_page.html', context=context)
 
 
@@ -78,11 +75,7 @@ def recipe_page(slug: str):
 @recipes_front_bp.route('/recipes', methods=['GET'])
 @login_required
 def recipe_creation_page():
-    context = {
-        # todo: cache
-        "meal_types": MealType.query.all(),
-        "tags": RecipeTag.query.all(),
-    }
+    context = get_recipe_related_objects_cached()
     return render_template('recipes/recipes/recipe_create.html', context=context)
 
 
@@ -94,12 +87,8 @@ def recipe_edit_page(slug: str):
         abort(404)
     if not is_owner_or_superuser(recipe.author):
         abort(403)
-        
-    context = {
-        # todo: cache
-        "meal_types": MealType.query.all(),
-        "tags": RecipeTag.query.all(),
-        "recipe": recipe
-    }
-        
+
+    context = get_recipe_related_objects_cached()
+    context['recipe'] = recipe
+  
     return render_template('recipes/recipes/recipe_edit.html', context=context)

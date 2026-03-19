@@ -283,14 +283,22 @@ def change_recipe_status(id: int):
 
 @recipes_bp.route('/recipe-tags', methods=['GET'])
 def get_recipe_tag_list():
-    pagination = paginate(
-        request_args=request.args,
-        sqlalchemy_query=RecipeTag.query,
-        pydantic_model=RecipeTagSchema,
-        list_name='recipe_tag_list',
-    )
+    cache_key = 'recipe-tag-list-response'
+    response = redis_client.get(cache_key)
+    
+    if response is not None:
+        response = json.loads(response)
+    else:
+        pagination = paginate(
+            request_args=request.args,
+            sqlalchemy_query=RecipeTag.query,
+            pydantic_model=RecipeTagSchema,
+            list_name='recipe_tag_list',
+        )
+        response = jsonify(pagination).get_json()
+        redis_client.set(cache_key, json.dumps(response), 3600)
 
-    return jsonify(pagination)
+    return response
 
 
 @recipes_bp.route('/recipe-tags/<int:id>', methods=['GET'])
@@ -356,16 +364,24 @@ def delete_recipe_tag(id: int):
 
 @recipes_bp.route('/meal-types/', methods=['GET'])
 def get_meal_type_list():
-    # todo: cache aggresively
-    pagination = paginate(
-        request_args=request.args,
-        sqlalchemy_query=MealType.query,
-        pydantic_model=MealTypeSchema,
-        list_name='meal_type_list',
-        no_per_page_limit=True
-    )
+    
+    cache_key = 'meal-types-list-response'
+    response = redis_client.get(cache_key)
+    
+    if response is not None:
+        response = json.loads(response)
+    else:
+        pagination = paginate(
+            request_args=request.args,
+            sqlalchemy_query=MealType.query,
+            pydantic_model=MealTypeSchema,
+            list_name='meal_type_list',
+            no_per_page_limit=True
+        )
+        response = jsonify(pagination).get_json()
+        redis_client.set(cache_key, json.dumps(response), 3600)
 
-    return jsonify(pagination)
+    return response
 
 
 @recipes_bp.route('/meal-types/<int:id>', methods=['GET'])
@@ -554,7 +570,6 @@ def unlike_recipe(id: int):
 
 @recipes_bp.route('/recipes/popular', methods=['GET'])
 def get_popular_recipes():
-    # todo: cache?
     recipe_id_list = json.loads(redis_client.get('popular_recipes'))
     
     popular_recipes = Recipe.ua_query().filter(Recipe.id.in_(recipe_id_list))
