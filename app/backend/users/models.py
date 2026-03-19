@@ -31,9 +31,11 @@ class User(db.Model, UserMixin):
     is_superuser: Mapped[bool] = mapped_column(default=False, server_default='0')
     
     like_count = column_property(
-        select(func.count(literal_column("like.id")))
-        .select_from(text("like, recipe"))
-        .where(literal_column("recipe.author_id = user.id AND like.recipe_id = recipe.id"))
+        select(func.count(text("\"like\".id")))
+        .select_from(db.text("\"like\""))
+        .join(db.text("recipe"), db.text("\"like\".recipe_id = recipe.id"))
+        .where(db.text("recipe.author_id = \"user\".id"))
+        .correlate_except()
         .scalar_subquery()
     )
     
