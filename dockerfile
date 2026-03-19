@@ -5,6 +5,7 @@ WORKDIR /app
 # Install dos2unix to ensure that the entrypoint file starts as expected
 RUN apt update
 RUN apt install -y dos2unix
+RUN apt install -y netcat-openbsd
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt

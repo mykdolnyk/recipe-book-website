@@ -5,7 +5,7 @@ SECRET_KEY = 'not-so-secret-key'
 
 BASE_DIR = Path(__file__).resolve().parent
 
-SQLALCHEMY_DATABASE_URI = "sqlite:///dev.db"
+SQLALCHEMY_DATABASE_URI = f"postgresql+psycopg://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}@{os.getenv('POSTGRES_HOST')}:{os.getenv('POSTGRES_PORT')}/{os.getenv('POSTGRES_DB')}"
 
 REDIS_URL = os.getenv('REDIS_URL')
 CELERY_CONFIG = {
@@ -27,7 +27,7 @@ PASSWORD_POLICY = {
     'strength': 0.66,
 }
 
-LOG_DIR = Path('/var/log/web')
+LOG_DIR = Path('/var/log/web/')
 
 LOGGING = {
     'version': 1,
