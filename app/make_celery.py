@@ -10,9 +10,9 @@ celery_app.autodiscover_tasks(['backend.recipes', 'backend.users'])
 
 # Periodic Tasks
 @celery_app.on_after_configure.connect
-def setup_periodic_tasks(sender: Celery, **kwargs):
+def run_tasks_on_startup(sender: Celery, **kwargs):
     sender.add_periodic_task(
-        timedelta(hours=1),
+        timedelta(minutes=1),
+        # The 1-minute period is for demonstrational purposes only
         calculate_popular_recipes.s(),
-        # "backend.recipes.tasks.calculate_popular_recipes",
         name='calculate popular recipes')

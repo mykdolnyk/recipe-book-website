@@ -2,7 +2,7 @@ from app_factory import db
 from flask.testing import FlaskClient
 from flask_login import login_user, logout_user
 from sqlalchemy import and_, or_
-
+from backend.recipes.tasks import calculate_popular_recipes
 from backend.recipes.models import MealType, Recipe, RecipeTag
 
 
@@ -351,6 +351,7 @@ def test_recipe_search(client: FlaskClient, app, testing_setup):
 
 def test_popular_recipes(client: FlaskClient, app, testing_setup):
     # Clean setup with no likes
+    calculate_popular_recipes() # calculate manually
     response = client.get('/api/recipes/popular')
     assert response.status_code == 200
     assert len(response.get_json()) == 0
@@ -368,7 +369,8 @@ def test_popular_recipes(client: FlaskClient, app, testing_setup):
         response = client.post(f'/api/recipes/{recipe.id}/like')
         assert response.status_code == 201
     
-    # Check again
+    # Update info, check again
+    calculate_popular_recipes()
     response = client.get('/api/recipes/popular')
     assert response.status_code == 200
     assert len(response.get_json()) == len(liked_recipes)
@@ -381,7 +383,8 @@ def test_popular_recipes(client: FlaskClient, app, testing_setup):
         response = client.post(f'/api/recipes/{recipe.id}/like')
         assert response.status_code == 201
     
-    # Check again
+    # Update info, check again
+    calculate_popular_recipes()
     response = client.get('/api/recipes/popular')
     assert response.status_code == 200
     assert len(response.get_json()) == len(liked_recipes)
