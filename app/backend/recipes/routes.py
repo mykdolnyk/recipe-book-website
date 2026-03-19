@@ -362,7 +362,7 @@ def delete_recipe_tag(id: int):
     return '', 204
 
 
-@recipes_bp.route('/meal-types/', methods=['GET'])
+@recipes_bp.route('/meal-types', methods=['GET'])
 def get_meal_type_list():
     
     cache_key = 'meal-types-list-response'

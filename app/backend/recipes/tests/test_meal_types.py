@@ -21,7 +21,7 @@ def test_get_meal_type(client: FlaskClient):
 def test_get_meal_type_list(client: FlaskClient):
     meal_types = MealType.query.all()
     
-    response = client.get('/api/meal-types/')
+    response = client.get('/api/meal-types')
     assert response.status_code == 200
     assert response.get_json()["total"] == len(meal_types)
 
