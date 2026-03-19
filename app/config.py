@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-SECRET_KEY = 'not-so-secret-key'
+SECRET_KEY = os.getenv('FLASK_SECRET_KEY')
 
 BASE_DIR = Path(__file__).resolve().parent
 
