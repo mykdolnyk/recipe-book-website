@@ -7,12 +7,13 @@ from pydantic import ValidationError
 from backend.utils.pagination import paginate
 from backend.utils.misc import ObjectManager, safe_commit
 from backend.utils.login import is_owner_or_superuser
+from backend.utils.attempt_restriction import AttemptRestricter
 from backend.users.schemas import UserCreate, UserDetailedSchema, UserUpdate, UserLogin, UserSchema
 from backend.users.models import ProfilePicture, User
 from backend.utils.errors import create_error_response, ErrorCode
 from flask import abort, jsonify, request
 from app_factory import db, redis_client
-
+import config
 
 logger = getLogger(__name__)
 
@@ -42,7 +43,7 @@ def get_user_list():
 
 
 @user_bp.route('/users', methods=["POST"])
-def register_user():    
+def register_user():
     manager = ObjectManager(
         db_model=User,
         create_schema=UserCreate,
@@ -55,7 +56,7 @@ def register_user():
     )
     with db.session.no_autoflush:
         pfp_ids = [pfp.id for pfp in ProfilePicture.query.all()]
-    
+
     if manager.success:
         manager.object.profile_picture_id = random.choice(pfp_ids)
         manager.commit_changes()
@@ -69,16 +70,16 @@ def get_user_info(id: int):
     user = User.active().filter_by(id=id).first()
     if not user:
         return create_error_response(ErrorCode.USER_NOT_FOUND)
-    
+
     cache_key = f'user-data:id={user.id}'
     response = redis_client.get(cache_key)
-    
+
     if response is not None:
         response = json.loads(response)
     else:
         response = UserDetailedSchema.model_validate(user).model_dump()
         redis_client.set(cache_key, json.dumps(response), 600)
-        
+
     return jsonify(response)
 
 
@@ -132,12 +133,21 @@ def login():
     if current_user.is_authenticated:
         return create_error_response('Already logged in.', status_code=400)
 
+    restricter = AttemptRestricter(key_prefix='login',
+                                   max_attempts=config.LOGIN_ATTEMPTS_MAX,
+                                   timeout=config.LOGIN_RESTRICTION_TIMEOUT)
+    if restricter.is_restricted():
+        return create_error_response(ErrorCode.TOO_MANY_LOGIN_ATTEMPTS)
+
     try:
         login_schema = UserLogin(**request.get_json())
     except ValidationError as error:
+        restricter.increase_attempt_count()
+        restricter.add_restriction_if_needed()
+        
         return create_error_response(error)
+    
     user: User = login_schema.user
-
     login_user(user)
 
     response = {

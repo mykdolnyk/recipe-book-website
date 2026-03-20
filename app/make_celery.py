@@ -33,4 +33,4 @@ def run_tasks_on_startup(sender: Celery, **kwargs):
         lock = redis_client.get(lock_id)
         if lock is None:
             task.delay()
-            redis_client.set(lock_id, 1, LOCK_EXPIRE)
+            redis_client.set(lock_id, 1, LOCK_EXPIRE, nx=True)

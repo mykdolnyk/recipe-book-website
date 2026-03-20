@@ -4,6 +4,7 @@ from flask_redis import FlaskRedis
 
 from backend.utils.anon_user import AnonymousUser
 from backend.utils.login import authorization_context_processors, redirect_to_login_callback
+from backend.utils.rate_limiting import setup_rate_limiting
 import config
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -76,6 +77,10 @@ def create_app(config_object=config, overrides=None):
     
     from frontend.recipes.routes import recipes_front_bp
     from frontend.users.routes import users_front_bp
+    
+    # Rate Limiting
+    setup_rate_limiting(app=user_bp, redis_client=redis_client)
+    setup_rate_limiting(app=recipes_bp, redis_client=redis_client)
     
     app.register_blueprint(user_bp)
     app.register_blueprint(recipes_bp)

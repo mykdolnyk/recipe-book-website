@@ -12,6 +12,8 @@ class ErrorCode(Enum):
     UNKNOWN = "An unknown error has occured."
     ALREADY_EXISTS = "Such object already exists."
     NO_COMPATIBLE_RECIPES = "No suitable recipes were found. Please try adjusting the settings and try again."
+    TOO_MANY_LOGIN_ATTEMPTS = "There have been too many failed login attempts. Please try again later."
+
 
 class PasswordRequirements(Enum):
     """Enum containing password requirement messages."""
