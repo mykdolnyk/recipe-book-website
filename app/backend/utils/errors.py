@@ -67,7 +67,7 @@ def create_error_response(*error_messages: ErrorCode | str | Exception, status_c
             new_errors = convert_validation_errors(error_msg, custom_messages=CUSTOM_MESSAGES)
             error_list.extend(new_errors)
         elif isinstance(error_msg, Exception):
-            error_list.append({'msg': error_msg.args[0]})
+            error_list.append({'msg': "An unexpected error occured."})
         # No match:
         else:
             raise ValueError(

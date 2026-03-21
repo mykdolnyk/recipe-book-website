@@ -16,7 +16,7 @@ class User(db.Model, UserMixin):
     
     name: Mapped[str] = mapped_column()
     bio: Mapped[str] = mapped_column(default='')
-    profile_picture_id: Mapped[int] = mapped_column(ForeignKey('profile_picture.id'))
+    profile_picture_id: Mapped[int] = mapped_column(ForeignKey('profile_picture.id'), nullable=True)
     profile_picture: Mapped['ProfilePicture'] = relationship(back_populates='users')
 
     recipes: Mapped[List['Recipe']] = relationship(back_populates='author')

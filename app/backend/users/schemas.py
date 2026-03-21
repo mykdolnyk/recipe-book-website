@@ -1,4 +1,4 @@
-from typing import Self
+from typing import Optional, Self
 from pydantic import BaseModel, ConfigDict, Field, EmailStr, computed_field, field_validator, model_validator
 from backend.utils.errors import PasswordRequirements
 from backend.users.models import ProfilePicture, User
@@ -69,7 +69,7 @@ class UserUpdate(BaseModel):
 class UserSchema(BaseModel):
     id: int
     name: str
-    profile_picture: 'ProfilePictureSchema'
+    profile_picture: Optional['ProfilePictureSchema'] = None
 
     model_config = ConfigDict(from_attributes=True)
 
