@@ -1,10 +1,16 @@
-from flask import abort
+from flask import abort, Blueprint
 import config
 from backend.utils.misc import get_ip_address
 
 
-def setup_rate_limiting(app, redis_client):
+def setup_rate_limiting(app: Blueprint, redis_client, testing=False):
     if not config.RATE_LIMIT_ENABLED:
+        return None
+
+    if app._got_registered_once and testing:
+        # Pytest calls this function for every test, and the blueprints 
+        # do not reset between tests. So, this block is required
+        # to prevent the changes after the BP is registered
         return None
     
     @app.before_request

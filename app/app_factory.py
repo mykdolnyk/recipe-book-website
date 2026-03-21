@@ -79,8 +79,8 @@ def create_app(config_object=config, overrides=None):
     from frontend.users.routes import users_front_bp
     
     # Rate Limiting
-    setup_rate_limiting(app=user_bp, redis_client=redis_client)
-    setup_rate_limiting(app=recipes_bp, redis_client=redis_client)
+    setup_rate_limiting(app=user_bp, redis_client=redis_client, testing=app.testing)
+    setup_rate_limiting(app=recipes_bp, redis_client=redis_client, testing=app.testing)
     
     app.register_blueprint(user_bp)
     app.register_blueprint(recipes_bp)
