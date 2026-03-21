@@ -22,7 +22,7 @@ def setup_csrf(app):
         token = session.get('csrf_token')
         if not token:
             token = secrets.token_hex(32)
-            response.set_cookie('csrf_token', token, samesite="Strict")
-            session['csrf_token'] = token
+        response.set_cookie('csrf_token', token, samesite="Strict")
+        session['csrf_token'] = token
 
         return response

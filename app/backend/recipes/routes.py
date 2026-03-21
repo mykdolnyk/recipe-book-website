@@ -439,7 +439,7 @@ def create_mix():
                                    author=current_user)
 
     if recipe_mix is None:
-        return create_error_response(ErrorCode.NO_COMPATIBLE_RECIPES, status_code=200)
+        return create_error_response(ErrorCode.NO_COMPATIBLE_RECIPES, status_code=400)
 
     response = RecipeMixSchema.model_validate(recipe_mix).model_dump()
     return jsonify(response)
