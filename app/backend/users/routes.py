@@ -11,7 +11,7 @@ from backend.utils.attempt_restriction import AttemptRestricter
 from backend.users.schemas import UserCreate, UserDetailedSchema, UserUpdate, UserLogin, UserSchema
 from backend.users.models import ProfilePicture, User
 from backend.utils.errors import create_error_response, ErrorCode
-from flask import abort, jsonify, request
+from flask import abort, jsonify, make_response, request
 from app_factory import db, redis_client
 import config
 
@@ -40,29 +40,6 @@ def get_user_list():
     )
 
     return jsonify(pagination)
-
-
-@user_bp.route('/users', methods=["POST"])
-def register_user():
-    manager = ObjectManager(
-        db_model=User,
-        create_schema=UserCreate,
-        get_schema=UserSchema
-    )
-    manager.create_object(
-        request.get_json(),
-        exclude_for_db=['password_confirm'],
-        commit=False
-    )
-    with db.session.no_autoflush:
-        pfp_ids = [pfp.id for pfp in ProfilePicture.query.all()]
-
-    if manager.success:
-        manager.object.profile_picture_id = random.choice(pfp_ids)
-        manager.commit_changes()
-
-    response = manager.generate_response()
-    return response
 
 
 @user_bp.route('/users/<int:id>', methods=["GET"])
@@ -128,6 +105,30 @@ def delete_user(id: int):
     return '', 204
 
 
+@user_bp.route('/users', methods=["POST"])
+def register_user():
+    manager = ObjectManager(
+        db_model=User,
+        create_schema=UserCreate,
+        get_schema=UserSchema
+    )
+    manager.create_object(
+        request.get_json(),
+        exclude_for_db=['password_confirm'],
+        commit=False
+    )
+    with db.session.no_autoflush:
+        pfp_ids = [pfp.id for pfp in ProfilePicture.query.all()]
+
+    if manager.success:
+        if len(pfp_ids) != 0:
+            manager.object.profile_picture_id = random.choice(pfp_ids)
+        manager.commit_changes()
+
+    response = manager.generate_response()
+    return response
+
+
 @user_bp.route('/auth/login', methods=['POST'])
 def login():
     if current_user.is_authenticated:
@@ -150,12 +151,12 @@ def login():
     user: User = login_schema.user
     login_user(user)
 
-    response = {
+    response = jsonify({
         'id': user.id
-    }
-
-    return jsonify(response)
-
+    })
+    response.delete_cookie("csrf_token")
+    
+    return response
 
 @user_bp.route('/auth/logout', methods=['POST'])
 def logout():
@@ -163,5 +164,10 @@ def logout():
         return create_error_response('Already logged out.', status_code=200)
 
     logout_user()
+    
+    response = jsonify({
+        'msg': "Successfully logged out."
+    })
+    response.delete_cookie("csrf_token")
 
-    return '', 200
+    return response

@@ -1,8 +1,8 @@
 from fakeredis import FakeRedis
 from redis import Redis
 from flask_redis import FlaskRedis
-
 from backend.utils.anon_user import AnonymousUser
+from backend.utils.csrf import setup_csrf
 from backend.utils.login import authorization_context_processors, redirect_to_login_callback
 from backend.utils.rate_limiting import setup_rate_limiting
 import config
@@ -82,6 +82,7 @@ def create_app(config_object=config, overrides=None):
     setup_rate_limiting(app=user_bp, redis_client=redis_client, testing=app.testing)
     setup_rate_limiting(app=recipes_bp, redis_client=redis_client, testing=app.testing)
     
+    # Registering BPs
     app.register_blueprint(user_bp)
     app.register_blueprint(recipes_bp)
     
@@ -90,6 +91,8 @@ def create_app(config_object=config, overrides=None):
     
     # Context Processors
     app.context_processor(authorization_context_processors)
+
+    setup_csrf(app=app)
 
     return app
 
