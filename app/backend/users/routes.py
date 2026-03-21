@@ -11,7 +11,7 @@ from backend.utils.attempt_restriction import AttemptRestricter
 from backend.users.schemas import UserCreate, UserDetailedSchema, UserUpdate, UserLogin, UserSchema
 from backend.users.models import ProfilePicture, User
 from backend.utils.errors import create_error_response, ErrorCode
-from flask import abort, jsonify, make_response, request
+from flask import abort, jsonify, make_response, request, session
 from app_factory import db, redis_client
 import config
 
@@ -157,6 +157,7 @@ def login():
         'id': user.id
     })
     response.delete_cookie("csrf_token")
+    session.pop("csrf_token")
     
     return response
 
@@ -171,5 +172,6 @@ def logout():
         'msg': "Successfully logged out."
     })
     response.delete_cookie("csrf_token")
+    session.pop("csrf_token")
 
     return response
