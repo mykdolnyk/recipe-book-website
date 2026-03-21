@@ -12,6 +12,9 @@ done
 echo "Postgres is ready!"
 python -u -m flask --app app/run db upgrade
 
+echo "Loading DB Fixtures..."
+python -m flask --app run loadfixtures
+
 echo "Preparing Static Files..."
 mkdir -p staticfiles
 cp -r static/* staticfiles/

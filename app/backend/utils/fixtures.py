@@ -1,7 +1,7 @@
 import json
 from backend.users.models import ProfilePicture
 import config
-from backend.recipes.models import MealType
+from backend.recipes.models import MealType, RecipeTag
 from app_factory import db
 
 
@@ -21,6 +21,18 @@ def load_fixtures():
             db.session.add(meal_type)
             total_entries_pasted += 1
 
+    # Recipe Tags
+    with open(config.FIXTURES_DIR / 'recipetags.json', 'r', encoding='utf-8') as f:
+        data = json.load(f)
+
+    for entry in data:
+        recipe_tag = RecipeTag(**entry)
+        if RecipeTag.query.filter(RecipeTag.id == recipe_tag.id).first():
+            total_entries_skipped += 1
+        else:
+            db.session.add(recipe_tag)
+            total_entries_pasted += 1
+    
     # Profile Pictures
     with open(config.FIXTURES_DIR / 'profilepictures.json', 'r', encoding='utf-8') as f:
         data = json.load(f)

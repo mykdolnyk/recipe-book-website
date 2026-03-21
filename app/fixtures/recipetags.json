@@ -1,0 +1,52 @@
+[
+    {
+        "id": 1,
+        "name": "Salty",
+        "slug": "salty"
+    },
+    {
+        "id": 2,
+        "name": "Sweet",
+        "slug": "sweet"
+    },
+    {
+        "id": 3,
+        "name": "Spicy",
+        "slug": "spicy"
+    },
+    {
+        "id": 4,
+        "name": "Bitter",
+        "slug": "bitter"
+    },
+    {
+        "id": 5,
+        "name": "Sour",
+        "slug": "sour"
+    },
+    {
+        "id": 6,
+        "name": "Soup",
+        "slug": "soup"
+    },
+    {
+        "id": 7,
+        "name": "Salad",
+        "slug": "salad"
+    },
+    {
+        "id": 8,
+        "name": "Fried",
+        "slug": "fried"
+    },
+    {
+        "id": 9,
+        "name": "Boiled",
+        "slug": "boiled"
+    },
+    {
+        "id": 10,
+        "name": "Baked",
+        "slug": "baked"
+    }
+]
