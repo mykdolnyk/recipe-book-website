@@ -322,6 +322,9 @@ def create_recipe_tag():
     )
     manager.create_object(request.get_json())
 
+    redis_client.delete('recipe-tag-list-response')
+    redis_client.delete('recipe-related-objects')
+
     response = manager.generate_response()
 
     return response

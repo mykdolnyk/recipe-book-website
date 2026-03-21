@@ -78,6 +78,8 @@ def edit_user(id: int):
         obj=user,
         data=request.get_json()
     )
+    
+    redis_client.delete(f'user-data:id={user.id}')
 
     response = manager.generate_response()
     return response
