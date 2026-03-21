@@ -62,12 +62,12 @@ class RecipeTagSchema(BaseModel):
 
 
 class RecipeCreate(BaseModel):
-    name: str = Field(..., max_length=64)
+    name: str = Field(..., min_length=2, max_length=64)
     calories: int
     cooking_time: int
     ingredients: str = Field(..., max_length=512)
     description: str | None = Field(..., max_length=512)
-    text: str = Field(..., max_length=8192)
+    text: str = Field(..., min_length=2, max_length=8192)
 
     meal_type_id: int
     tags: Optional[list[int]] = Field(default_factory=list)

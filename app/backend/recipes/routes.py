@@ -294,6 +294,7 @@ def get_recipe_tag_list():
             sqlalchemy_query=RecipeTag.query,
             pydantic_model=RecipeTagSchema,
             list_name='recipe_tag_list',
+            no_per_page_limit=True
         )
         response = jsonify(pagination).get_json()
         redis_client.set(cache_key, json.dumps(response), 3600)
