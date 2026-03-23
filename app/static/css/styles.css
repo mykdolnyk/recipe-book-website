@@ -697,3 +697,11 @@ select:disabled, input:disabled {
     transition-duration: 0.25s;
     overflow: hidden;
 }
+
+.preserve-newlines {
+    white-space: pre-wrap;
+}
+
+.recipe-text img {
+    width: 100%;
+}
