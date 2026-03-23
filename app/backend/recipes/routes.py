@@ -5,6 +5,7 @@ from flask import abort, jsonify, request
 from flask_login import current_user, login_required
 from pydantic import ValidationError
 from backend.recipes.helpers import create_recipe_mix, search_recipes, get_popular_recipes_query
+from backend.recipes.tasks import calculate_popular_recipes
 from backend.utils.misc import ObjectManager, safe_commit
 from backend.utils.errors import ErrorCode, create_error_response
 from backend.utils.login import is_owner_or_superuser, superuser_only
@@ -142,6 +143,7 @@ def delete_recipe(id: int):
         abort(401)
     if not is_owner_or_superuser(recipe.author):
         abort(403)
+        
 
     recipe.is_visible = False
     errors = safe_commit(db.session)
@@ -346,6 +348,9 @@ def update_recipe_tag(id: int):
         obj=tag,
         data=request.get_json()
     )
+    
+    redis_client.delete('recipe-tag-list-response')
+    redis_client.delete('recipe-related-objects')
 
     response = manager.generate_response()
     return response
@@ -362,6 +367,9 @@ def delete_recipe_tag(id: int):
     errors = safe_commit(db.session)
     if errors:
         return errors
+    
+    redis_client.delete('recipe-tag-list-response')
+    redis_client.delete('recipe-related-objects')
 
     return '', 204
 
