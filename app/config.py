@@ -87,3 +87,9 @@ LOGGING = {
         'level': 'ERROR'
     }
 }
+
+
+LOAD_EXAMPLE_FIXTURES = True 
+"""Makes it so the `load_fixtures` function loads the fixtures from `app\\fixtures\\example\\` dir.
+It may be enabled **only** for demonstrational purposes, and disabled for production/real use.
+"""

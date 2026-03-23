@@ -55,7 +55,7 @@ def get_user_info(id: int):
         response = json.loads(response)
     else:
         response = UserDetailedSchema.model_validate(user).model_dump()
-        redis_client.set(cache_key, json.dumps(response), 600)
+        redis_client.set(cache_key, json.dumps(response), 120)
 
     return jsonify(response)
 

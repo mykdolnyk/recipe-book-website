@@ -1,0 +1,55 @@
+[
+    {
+        "id": 1,
+        "email": "1@example.com",
+        "bio": "This is a personal bio.",
+        "password": "$2b$12$3ugvi46cmwdrMDXBGh.YDumk9iUyFWQoGEbLHCrHbkjDYzgoN3haS",
+        "name": "Example User 1",
+        "profile_picture_id": 1,
+        "is_active": true,
+        "is_superuser": false
+    },
+    {
+        "id": 2,
+        "email": "2@example.com",
+        "bio": "This is a bio.",
+        "password": "$2b$12$3ugvi46cmwdrMDXBGh.YDumk9iUyFWQoGEbLHCrHbkjDYzgoN3haS",
+        "name": "Example User 2",
+        "profile_picture_id": 2,
+        "is_active": true,
+        "is_superuser": false
+    },
+    {
+        "id": 3,
+        "email": "3@example.com",
+        "bio": "This is personal.",
+        "password": "$2b$12$3ugvi46cmwdrMDXBGh.YDumk9iUyFWQoGEbLHCrHbkjDYzgoN3haS",
+        "name": "Example User 3",
+        "profile_picture_id": 3,
+        "is_active": true,
+        "is_superuser": false
+    },
+
+
+    {
+        "id": 4,
+        "email": "4@example.com",
+        "bio": "This.",
+        "password": "$2b$12$3ugvi46cmwdrMDXBGh.YDumk9iUyFWQoGEbLHCrHbkjDYzgoN3haS",
+        "name": "Admin User 1",
+        "profile_picture_id": 1,
+        "is_active": true,
+        "is_superuser": true
+    },
+
+    {
+        "id": 5,
+        "email": "5@example.com",
+        "bio": "is a personal bio.",
+        "password": "$2b$12$3ugvi46cmwdrMDXBGh.YDumk9iUyFWQoGEbLHCrHbkjDYzgoN3haS",
+        "name": "Deactivated User 1",
+        "profile_picture_id": 2,
+        "is_active": false,
+        "is_superuser": false
+    }
+]

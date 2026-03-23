@@ -1,0 +1,80 @@
+[
+    {
+        "id": 1,
+        "name": "Crisp Peach Cobbler",
+        "calories": 371,
+        "cooking_time": 45,
+        "ingredients": "6 large fresh peaches, pitted and cut into eighths\n1 lemon, zested and juiced\n\nBatter:\n½ cup unsalted butter, at room temperature\n1 ¼ cups white sugar\n1 ⅓ cups self-rising flour\n⅓ cup rolled oats\n⅔ cup whole milk\n\nGlaze:\n¼ cup white sugar\n2 tablespoons cold water, or as needed to wet topping sugar",
+        "description": "An incredibly tasty peach cobbler that you will totally enjoy! ",
+        "text": "\n![](https://images.unsplash.com/photo-1567552229523-aaa2f6b76a60?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)\n\nPreheat oven to 375 degrees F *(190 degrees C)*. Place a baking sheet on the rack under the middle rack to catch drips. Generously butter a 2-inch deep (2-quart) baking dish.\n\nPlace peach sections into prepared baking dish. Sprinkle with lemon juice and zest.\n\nStir butter and sugar together in a mixing bowl. Mix until creamed and resembles a sugary, buttery paste, **4 to 5 minutes**. Add oats and flour; stir until flour and oats are incorporated into the butter-sugar mixture and mixture resembles coarse crumbs, **4 to 5 minutes**. Pour in milk; stir until mixture is wet and creamy, like a thick spreadable batter,** 3 to 4 minutes.**\n\nDrop batter by spoonful on top of the peaches. Spread batter evenly over the surface of the peaches. Sprinkle 1/4 cup sugar on the batter. Spritz with water until sugar is wet and surface glistens.\n\nBake in preheated oven on middle rack until browned and crispy, about **45** minutes. Let cool at least **30** minutes before serving.",
+        "meal_type_id": 1,
+        "author_id": 1,
+        "slug": "crisp-peach-cobbler",
+        "is_published": true
+    },
+    {
+        "id": 2,
+        "name": "Slow Cooker Lemon Garlic Chicken",
+        "calories": 192,
+        "cooking_time": 210,
+        "ingredients": "1 teaspoon dried oregano\n½ teaspoon salt\n¼ teaspoon ground black pepper\n2 tablespoons butter\n2 pounds skinless, boneless chicken breast halves\n¼ cup water\n3 tablespoons fresh lemon juice\n2 cloves garlic, minced\n1 teaspoon chicken bouillon granules\n1 teaspoon chopped fresh parsley",
+        "description": "A wonderful and easy recipe just for your dinner.",
+        "text": "Mix together oregano, salt, and pepper in a small bowl. Rub spice mixture all over chicken breasts. Melt butter in a skillet over medium heat.\n\n![](https://images.unsplash.com/photo-1604740795024-c06eeca4bf89?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)\n\nCook chicken in butter until lightly browned, 3 to 5 minutes per side.\n\nPlace chicken in a slow cooker.\n\nMix water, lemon juice, garlic, and bouillon in the same skillet; bring to boil.\n\nPour mixture over chicken in the slow cooker.\n\nCover and cook on Low for 6 hours or High for 3 hours. Add parsley to the slow cooker 15 to 30 minutes before the end of cook time.\n\nServe hot and enjoy!\n\n![](https://images.unsplash.com/photo-1670398564097-0762e1b30b3a?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)\n",
+        "meal_type_id": 3,
+        "author_id": 2,
+        "slug": "slow-cooker-lemon-garlic-chicken",
+        "is_published": true
+    },
+    {
+        "id": 3,
+        "name": "Turkey Avocado Panini",
+        "calories": 723,
+        "cooking_time": 25,
+        "ingredients": "½ ripe avocado\n¼ cup mayonnaise\n2 ciabatta rolls, halved lengthwise\n1 tablespoon olive oil, divided\n2 slices provolone cheese, divided\n1 cup whole fresh spinach leaves, divided\n4 ounces thinly sliced mesquite-smoked turkey breast, divided\n2 roasted red peppers, sliced into strips, divided",
+        "description": "Yummy sandwich to start your day with!",
+        "text": "![](https://images.unsplash.com/photo-1621852004158-f3bc188ace2d?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)\n\nMash avocado and mayonnaise together in a bowl until thoroughly combined.\n\nPreheat a panini sandwich press.\n\nBrush bottom of each roll with olive oil; place onto the panini press, oiled sides down. Place **1** slice cheese, **1/2** spinach leaves, **1/2** turkey, and **1/2** sliced peppers on each roll on panini press. Spread 1/2 avocado mixture on cut surface of each top roll; place **1** top roll on each sandwich. Brush top of each roll with olive oil.\n\nClose the panini press; cook until rolls toasted and crisp, with golden brown grill marks, and the cheese has melted, *5 to 8 minutes.*",
+        "meal_type_id": 1,
+        "author_id": 3,
+        "slug": "turkey-avocado-panini",
+        "is_published": true
+    },
+    {
+        "id": 4,
+        "name": "Southern-Style Baked Banana Pudding",
+        "calories": 408,
+        "cooking_time": 45,
+        "ingredients": "4 large eggs\n\nCustard:\n½ cup white sugar\n¼ teaspoon salt\n⅓ cup all-purpose flour\n1 tablespoon all-purpose flour\n2 cups milk\n1 tablespoon banana liqueur (Optional)\n½ teaspoon vanilla extract\n1 tablespoon cold butter\n\nPudding:\n3 very ripe bananas, or more to taste, sliced\n1 ½ teaspoons freshly squeezed lemon juice\n1 (12 ounce) package miniature vanilla wafers\n\nMeringue Topping:\n⅛ teaspoon cream of tartar\n2 tablespoons white sugar",
+        "description": "Delicious banana pudding for you to enjoy!",
+        "text": "Separate eggs, placing the whites in the bowl of a stand mixer and the yolks into a saucepan.\n\n**Prepare the custard**: Add sugar, salt, and 1/3 cup plus 1 tablespoon flour to the yolks. Splash in about 1/4 of the milk and start blending mixture with a whisk. Pour in remaining milk and whisk until smooth.\n\n![](https://images.unsplash.com/photo-1526364163643-89e30b8fcb70?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)\n\nCook and stir mixture over medium heat until hot to the touch, occasionally dipping your finger in to test. Whisk constantly until custard is thick enough to form ribbons.\n\nRemove custard from heat and add banana liqueur, vanilla, then cold butter. Whisk until butter dissolves. Set custard aside.\n\nPreheat the oven to **400** degrees F *(200 degrees C)*.\n\nBegin to assemble the pudding: Toss banana slices with lemon juice.\n\nSpread 1/4 of the custard over the bottom of a baking dish. Add a single layer of vanilla wafers. Cover with 1/2 of the bananas and spread 1/2 of the remaining custard on top. Add another layer of vanilla wafers, using slightly fewer this time. Top with remaining bananas and custard. Smooth the top and tap dish against the counter to settle the pudding.\n\nMake the meringue topping: Add cream of tartar to the egg whites. Beat using the whisk attachment until foamy. Gradually add sugar and beat until stiff, but not dry, peaks form. Spread meringue over the pudding using a soft spatula, creating ridges for contrast.\n\nBake in the preheated oven until meringue is nicely browned, 7 to 10 minutes. Serve warm or chilled.",
+        "meal_type_id": 1,
+        "author_id": 1,
+        "slug": "southern-style-baked-banana-pudding",
+        "is_published": true
+    },
+    {
+        "id": 5,
+        "name": "Harvest Salad",
+        "calories": 338,
+        "cooking_time": 15,
+        "ingredients": "½ cup chopped walnuts\n1 bunch spinach, rinsed and torn into bite-sized pieces\n2 tomatoes, chopped\n1 avocado, peeled, pitted, and diced\n½ red onion, thinly sliced\n½ cup dried cranberries\n½ cup crumbled blue cheese\n⅓ cup walnut oil\n2 tablespoons red raspberry jam (with seeds)\n2 tablespoons red wine vinegar\nsalt to taste\nfreshly ground black pepper to taste",
+        "description": "Fresh salad that will set the mood for the rest of your day.",
+        "text": "Preheat the oven to **375** degrees F (**190** degrees C).\n\nSpread walnuts in a single layer on a baking sheet. Toast in the preheated oven until walnuts begin to brown, about **5** minutes.\n\nCombine walnuts, spinach, tomatoes, avocado, red onion, cranberries, and blue cheese in a large bowl.\n\nWhisk walnut oil, jam, and vinegar together in a small bowl: season with salt and black pepper. Pour over salad; toss to coat.\n\n![](https://images.unsplash.com/photo-1607532941433-304659e8198a?q=80&w=1078&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)",
+        "meal_type_id": 5,
+        "author_id": 2,
+        "slug": "harvest-salad",
+        "is_published": true
+    },
+    {
+        "id": 6,
+        "name":"d'Anjou Pear and Almond Tarts",
+        "calories": 195,
+        "cooking_time": 45,
+        "ingredients":"18 (3 inch) unbaked tart shells\n7 tablespoons brown sugar\n2 tablespoons butter, melted\n1 teaspoon pear-flavored white balsamic vinegar\n1 teaspoon ground cinnamon\n3 large ripe d'Anjou pears - peeled, cored, and diced\n3 tablespoons chopped almonds",
+        "description":"Sweet little tarts that you won't be able to stop eating!",
+        "text": "Preheat oven to **350** degrees F (***175** degrees C)*. Place tart shells on a baking sheet.\n\nStir brown sugar, melted butter, balsamic vinegar, and cinnamon together in a bowl; stir in pears and chopped almonds until completely coated. Spoon pear mixture into tart shells.\n\nBake in the preheated oven until golden, about 45 minutes.\n\n![](https://images.unsplash.com/photo-1649239702611-ebee87c0e537?q=80&w=1025&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)",
+        "meal_type_id": 2,
+        "author_id": 3,
+        "slug": "d-anjou-pear-and-almond-tarts",
+        "is_published": true
+    }
+]
