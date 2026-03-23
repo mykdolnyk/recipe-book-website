@@ -44,7 +44,7 @@
         <h3>Tags</h3>
         <select name="tags" id="tag-list" size="1" multiple>
             {% for tag in context.tags %}
-            <option value="{{ tag.id }}" {% if tag in context.recipe.tags %}selected{% endif %}> {{ tag.name }}</option>
+            <option value="{{ tag.id }}" {% if tag.id in context.recipe_tag_ids %}selected{% endif %}> {{ tag.name }}</option>
             {% endfor %}
         </select>
     </div>

@@ -90,5 +90,6 @@ def recipe_edit_page(slug: str):
 
     context = get_recipe_related_objects_cached()
     context['recipe'] = recipe
+    context['recipe_tag_ids'] = {tag.id for tag in recipe.tags}
   
     return render_template('recipes/recipes/recipe_edit.html', context=context)
