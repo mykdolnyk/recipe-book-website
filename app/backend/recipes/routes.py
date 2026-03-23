@@ -78,6 +78,11 @@ def get_recipe_list():
     published_only = request.args.get('published_only')
     if published_only and published_only.lower() in ('true', '1'):
         query = query.filter(Recipe.is_published == True)
+        
+    # Order by reversed if needed
+    reversed_order = request.args.get('reversed_order')
+    if reversed_order and reversed_order.lower() in ('true', '1'):
+        query = query.order_by(Recipe.published_on.desc())
 
     pagination = paginate(
         request_args=request.args,

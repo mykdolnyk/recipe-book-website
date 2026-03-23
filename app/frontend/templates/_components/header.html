@@ -3,6 +3,7 @@
         <div class="left-side">
             <a class="logo" href="{{ url_for("recipes_frontend.index_page")}}">DishMixer</a>
             <a href="{{ url_for("recipes_frontend.mix_creation_page") }}">Mix Now</a>
+            <a href="{{ url_for("recipes_frontend.all_recipes_list_page") }}">New Recipes</a>
         </div>
         <div class="right-side">
             {% if current_user.is_anonymous %}

@@ -1,10 +1,17 @@
 const recipeCardTemplate = document.getElementById("recipe-card-template")
 const recipeCardList = document.getElementsByClassName("card-container")[0]
 
-async function getRecipes() {
+async function getPopularRecipes() {
     let res = await fetch(`/api/recipes/popular`)
     const data = await res.json()
     return data;
+}
+
+async function getRecipes() {
+    let res = await fetch(`/api/recipes`)
+    const data = await res.json()
+    const redata = await data['recipe_list']
+    return redata;
 }
 
 function renderRecipes(recipes) {
@@ -21,14 +28,19 @@ function renderRecipes(recipes) {
         let url = `/recipes/${recipe.slug}`
         clone.querySelector(".recipe-name").href = url
 
-        recipeCardList.appendChild(clone);
+        recipeCardList.appendChild(clone)
     });
 
 }
 
 async function loadRecipes() {
-    const data = await getRecipes();
-    renderRecipes(data);
+    let data = await getPopularRecipes();
+    if (data.length == 0) {
+        data = await getRecipes()
+        // Get all recipes
+    }
+    renderRecipes(data)
+
 }
 
 loadRecipes()

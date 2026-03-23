@@ -72,7 +72,7 @@ def recipe_page(slug: str):
     return render_template(template_name, context=context)
     
 
-@recipes_front_bp.route('/recipes', methods=['GET'])
+@recipes_front_bp.route('/new-recipe', methods=['GET'])
 @login_required
 def recipe_creation_page():
     context = get_recipe_related_objects_cached()
@@ -93,3 +93,10 @@ def recipe_edit_page(slug: str):
     context['recipe_tag_ids'] = {tag.id for tag in recipe.tags}
   
     return render_template('recipes/recipes/recipe_edit.html', context=context)
+
+
+@recipes_front_bp.route('/recipes', methods=['GET'])
+def all_recipes_list_page():   
+    context = get_recipe_related_objects_cached()
+     
+    return render_template('recipes/recipes/all_recipes_list.html', context=context)
