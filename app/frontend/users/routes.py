@@ -28,7 +28,7 @@ def logout_page():
 
 @users_front_bp.route('/users/<int:id>', methods=['GET'])
 def user_profile_page(id: int):
-    user = User.query.filter(User.id == id).first_or_404()
+    user = User.query.filter(User.id == id, User.is_active == True).first_or_404()
     return render_template('/users/profile_page.html')
 
 
