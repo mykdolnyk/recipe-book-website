@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from logging import getLogger
 from flask.blueprints import Blueprint
 from flask import abort, jsonify, request
@@ -82,6 +83,8 @@ def get_recipe_list():
     # Order by reversed if needed
     reversed_order = request.args.get('reversed_order')
     if reversed_order and reversed_order.lower() in ('true', '1'):
+        query = query.order_by(Recipe.published_on.asc())
+    else:
         query = query.order_by(Recipe.published_on.desc())
 
     pagination = paginate(
@@ -262,6 +265,9 @@ def update_recipe_application(id: int):
             obj=application.recipe,
             data={"is_published": True}
         )
+        # Set published_on to now
+        application.recipe.published_on = datetime.now()
+        recipe_manager.commit_changes()
 
     response = application_manager.generate_response()
     return response

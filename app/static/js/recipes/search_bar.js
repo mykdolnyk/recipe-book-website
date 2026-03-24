@@ -1,7 +1,7 @@
 const mealTypesSelect = document.getElementById("meal-types-select");
 const tagsSelect = document.getElementById("tags-select");
 const form = document.getElementById("search-bar")
-const searchMode = true
+let searchMode = true
 
 async function getMealTypes() {
     const res = await fetch(`/api/meal-types`)

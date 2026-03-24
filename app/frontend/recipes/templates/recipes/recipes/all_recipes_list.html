@@ -6,6 +6,9 @@
         let customQueryParams = {"published_only": "true", "reversed_order": "true"};
     </script>
     <script src="{{ url_for("static", filename="js/recipes/search_bar.js" ) }}" defer></script>
+    <script>
+        let searchMode = false;
+    </script>
     <script src="{{ url_for("static", filename="js/recipes/load_recipe_cards.js" ) }}" defer></script>
 {% endblock js %}
 
