@@ -15,6 +15,9 @@
                 <a href="{{ url_for("recipes_frontend.favorites_page")}}">My Favs</a>
                 <hr width="1" class="vertical-line">
                 <a href="{{ url_for("users_frontend.user_profile_page", id=current_user.id )}}">Hi, <b>{{current_user.name}}</b></a>
+                {% if current_user.is_superuser %}
+                <a href="{{ url_for("admin.index")}}" class='button admin-button' >Admin</b></a>
+                {% endif %}
                 <a href="{{ url_for("users_frontend.logout_page")}}" class='button'>Log Out</a>
             {% endif %}
         </div>

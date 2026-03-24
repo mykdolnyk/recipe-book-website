@@ -34,7 +34,7 @@ class User(db.Model, UserMixin):
         select(func.count(text("\"like\".id")))
         .select_from(db.text("\"like\""))
         .join(db.text("recipe"), db.text("\"like\".recipe_id = recipe.id"))
-        .where(db.text("recipe.author_id = \"user\".id"))
+        .where(db.text("recipe.author_id") == id)
         .correlate_except()
         .scalar_subquery()
     )
@@ -47,7 +47,6 @@ class User(db.Model, UserMixin):
         .where(literal_column("recipe.is_visible") == True)
         .scalar_subquery()
     )
-
     
     @classmethod
     def active(cls):
@@ -61,4 +60,7 @@ class ProfilePicture(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     file_path: Mapped[str] = mapped_column()
     users: Mapped[List[User]] = relationship(back_populates='profile_picture')
+    
+    def __repr__(self):
+        return f'<Profile Picture "{self.file_path}">'
     

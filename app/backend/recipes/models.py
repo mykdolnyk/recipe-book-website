@@ -31,6 +31,9 @@ class MealType(db.Model):
     name: Mapped[str] = mapped_column()
     slug: Mapped[str] = mapped_column(unique=True, name='slug')
     recipes: Mapped[List['Recipe']] = relationship(back_populates='meal_type')
+    
+    def __repr__(self):
+        return f"<MealType: name='{self.name}', id={self.id}>"
 
 
 class RecipeTag(db.Model):
@@ -39,6 +42,9 @@ class RecipeTag(db.Model):
     slug: Mapped[str] = mapped_column(unique=True, name='slug')
     recipes: Mapped[List['Recipe']] = relationship(
         secondary=recipe_tag_association, back_populates='tags')
+    
+    def __repr__(self):
+        return f"<RecipeTag: name='{self.name}', id={self.id}>"
 
 
 class Like(db.Model):
@@ -146,7 +152,7 @@ class Recipe(db.Model):
         return query
 
     def __repr__(self):
-        return f"<Recipe: id={self.id}, author_id={self.author_id}>"
+        return f"<Recipe: name='{self.name}', id={self.id}, author_id={self.author_id}>"
 
 
 class RecipeMix(db.Model):
@@ -159,6 +165,9 @@ class RecipeMix(db.Model):
     created_on: Mapped[datetime] = mapped_column(default=datetime.now)
     recipes: Mapped[List[Recipe]] = relationship(
         secondary=recipe_mix_association, back_populates='mixes')
+
+    def __repr__(self):
+        return f"<RecipeMix: id={self.id}, author_id={self.author_id}>"
 
 
 class RecipePublicationApplication(db.Model):
@@ -177,3 +186,6 @@ class RecipePublicationApplication(db.Model):
     last_reviewed_by: Mapped["User"] = relationship(
         back_populates='reviewed_applications')
     last_reviewed_by_id: Mapped[Optional[int]] = mapped_column(ForeignKey('user.id'))
+    
+    def __repr__(self):
+        return f"<RecipeApplication: recipe.name='{self.recipe.name}', id={self.id}, author_id={self.recipe.author_id}>"

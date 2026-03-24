@@ -1,18 +1,22 @@
+from backend.recipes.admin import ApplicationView, RecipeView
+from backend.users.admin import UserView
+from backend.utils.admin.views import AdminHomeView
+import config
 from fakeredis import FakeRedis
 from redis import Redis
-from flask_redis import FlaskRedis
-from backend.utils.anon_user import AnonymousUser
-from backend.utils.csrf import setup_csrf
-from backend.utils.login import authorization_context_processors, redirect_to_login_callback
-from backend.utils.rate_limiting import setup_rate_limiting
-import config
 from flask import Flask
+from flask_redis import FlaskRedis
+from flask_admin import Admin
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from password_strength import PasswordPolicy
 from logging.config import dictConfig as logging_config
 from celery import Celery, Task
+from backend.utils.anon_user import AnonymousUser
+from backend.utils.csrf import setup_csrf
+from backend.utils.login import authorization_context_processors, redirect_to_login_callback
+from backend.utils.rate_limiting import setup_rate_limiting
 
 
 db = SQLAlchemy()
@@ -20,6 +24,7 @@ migrate = Migrate()
 login_manager = LoginManager()
 password_policy = PasswordPolicy.from_names(**config.PASSWORD_POLICY)
 redis_client: Redis = FlaskRedis()
+admin = Admin()
 
 
 def create_app(config_object=config, overrides=None):
@@ -38,6 +43,7 @@ def create_app(config_object=config, overrides=None):
     db.init_app(app=app)
     migrate.init_app(app=app, db=db)
     login_manager.init_app(app=app)
+    admin.init_app(app=app, index_view=AdminHomeView(), url=config.ADMIN_URL_PATH)
     celery_init_app(app=app)
     redis_client.init_app(app=app)
     if app.testing:
@@ -55,6 +61,11 @@ def create_app(config_object=config, overrides=None):
         recipe_mix_association,
         recipe_tag_association,
     )
+    
+    # Admin
+    admin.add_view(ApplicationView(RecipePublicationApplication, db.session))
+    admin.add_view(RecipeView(Recipe, db.session))
+    admin.add_view(UserView(User, db.session))
 
     # Login 
     @login_manager.user_loader

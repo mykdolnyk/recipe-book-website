@@ -23,6 +23,7 @@ LOGIN_RESTRICTION_TIMEOUT = 60 * 15
 
 CSRF_PROTECTION = True
 
+ADMIN_URL_PATH = Path('/admin')
 STATIC_URL_PATH = Path('/static')
 FIXTURES_DIR = BASE_DIR / 'fixtures'
 
