@@ -46,7 +46,6 @@ async function fillInRecipeData(data) {
         authorPfp.src = data.author.profile_picture.path
         authorPfp.alt = `${data.name}'s Profile Picture`
         
-        // todo v; and also the "add to favs" button
         likeCount.textContent = data.like_count
     }
 

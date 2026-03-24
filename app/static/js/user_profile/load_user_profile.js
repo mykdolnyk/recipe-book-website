@@ -20,7 +20,6 @@ async function fillInUserData(data) {
     bio.textContent = data.bio
     pfp.src = data.profile_picture.path
     pfp.alt = `${data.name}'s Profile Picture`
-    // todo:
     recipeCount.textContent = data.recipe_count
     likeCount.textContent = data.like_count
 }
