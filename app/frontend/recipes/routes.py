@@ -97,6 +97,4 @@ def recipe_edit_page(slug: str):
 
 @recipes_front_bp.route('/recipes', methods=['GET'])
 def all_recipes_list_page():   
-    context = get_recipe_related_objects_cached()
-     
-    return render_template('recipes/recipes/all_recipes_list.html', context=context)
+    return render_template('recipes/recipes/all_recipes_list.html')
